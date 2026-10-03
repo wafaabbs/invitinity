@@ -23,15 +23,16 @@ window.INV = (() => {
   let lang = [urlLang, store.get('inv_lang'), (navigator.language || '').slice(0, 2)].find(l => LANGS.includes(l)) || cfg.defaultLang || 'id';
 
   // Indonesian source text is captured from the DOM so it never has to be duplicated.
-  const base = new Map();
+  const base = new Map();       // element -> original Indonesian HTML/text
+  const baseAttr = new Map();   // element -> { attr: original value }
   const usesText = el => el.tagName === 'TITLE' || el.tagName === 'OPTION';
   function capture(root = document) {
     $$('[data-i18n]', root).forEach(el => { if (!base.has(el)) base.set(el, usesText(el) ? el.textContent : el.innerHTML); });
     $$('[data-i18n-attr]', root).forEach(el => {
-      el.dataset.i18nAttr.split(';').forEach(pair => {
-        const [attr] = pair.split(':');
-        if (!el.dataset[`base_${attr}`]) el.dataset[`base_${attr}`] = el.getAttribute(attr) || '';
-      });
+      if (baseAttr.has(el)) return;
+      const orig = {};
+      el.dataset.i18nAttr.split(';').forEach(pair => { const [attr] = pair.split(':'); orig[attr] = el.getAttribute(attr) || ''; });
+      baseAttr.set(el, orig);
     });
   }
   function tr(key, fallback) { return lang === 'id' ? fallback : (window.I18N?.[lang]?.[key] ?? fallback); }
@@ -40,10 +41,10 @@ window.INV = (() => {
       const v = tr(el.dataset.i18n, orig);
       if (usesText(el)) el.textContent = v; else el.innerHTML = v;
     });
-    $$('[data-i18n-attr]').forEach(el => {
+    baseAttr.forEach((orig, el) => {
       el.dataset.i18nAttr.split(';').forEach(pair => {
         const [attr, key] = pair.split(':');
-        el.setAttribute(attr, tr(key, el.dataset[`base_${attr}`]));
+        el.setAttribute(attr, tr(key, orig[attr]));
       });
     });
   }
@@ -56,6 +57,7 @@ window.INV = (() => {
     applyStatic();
     applySettingsText();
     $$('[data-lang]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === l)));
+    $$('[data-lang-current]').forEach(el => { el.textContent = l.toUpperCase(); });
     refreshWaLinks();
     listeners.forEach(fn => fn(l));
   }
@@ -77,7 +79,7 @@ window.INV = (() => {
   const merge = (s) => ({ ...window.DEFAULT_SETTINGS, ...s, sections: { ...window.DEFAULT_SETTINGS.sections, ...(s?.sections || {}) } });
 
   function applyFont(key) {
-    const p = window.FONT_PRESETS[key] || window.FONT_PRESETS.modern;
+    const p = window.FONT_PRESETS[key] || window.FONT_PRESETS.warm;
     const root = document.documentElement.style;
     root.setProperty('--font-serif', p.serif);
     root.setProperty('--font-sans', p.sans);
@@ -86,7 +88,7 @@ window.INV = (() => {
   }
   function applySettings() {
     applyFont(settings.font);
-    if (/^#[0-9a-f]{6}$/i.test(settings.accent || '')) document.documentElement.style.setProperty('--gold', settings.accent);
+    if (/^#[0-9a-f]{6}$/i.test(settings.accent || '')) document.documentElement.style.setProperty('--accent', settings.accent);
     Object.entries(settings.sections).forEach(([name, on]) => {
       $$(`[data-section="${name}"], [data-section-link="${name}"]`).forEach(el => { el.hidden = !on; });
     });
@@ -169,28 +171,60 @@ window.INV = (() => {
 
   const postCard = (p) => `
     <a class="post" href="article.html?slug=${encodeURIComponent(p.slug)}" data-reveal>
-      <div class="post__cover">${p.cover_url ? `<img src="${esc(p.cover_url)}" alt="" loading="lazy">` : '<svg viewBox="0 0 24 24"><use href="#i-infinity"/></svg>'}</div>
-      <time datetime="${esc(p.published_at || '')}">${esc(p.published_at ? fmtDate(p.published_at) : '')}</time>
-      <h3>${esc(pick(p.title))}</h3>
-      <p>${esc(pick(p.excerpt))}</p>
-      <span class="link">${esc(ui('readMore'))}</span>
+      <div class="post__cover">${p.cover_url ? `<img src="${esc(p.cover_url)}" alt="" loading="lazy">` : '<span class="ph">Invitinity</span>'}</div>
+      <div class="post__body">
+        <time datetime="${esc(p.published_at || '')}">${esc(p.published_at ? fmtDate(p.published_at) : '')}</time>
+        <h3>${esc(pick(p.title))}</h3>
+        <p>${esc(pick(p.excerpt))}</p>
+        <span class="link-more">${esc(ui('readMore'))}</span>
+      </div>
     </a>`;
 
-  /* ---------- Page chrome: nav, mobile menu, reveal ---------- */
+  // Render static invitation mockups declared as data-dz='{"theme":..}'.
+  function renderMocks(root = document) {
+    $$('[data-dz]', root).forEach(el => {
+      try { el.innerHTML = design(JSON.parse(el.dataset.dz)); } catch { /* bad JSON — leave empty */ }
+    });
+  }
+
+  // Wordmark: split letters for the one-time typing reveal.
+  function typeLogo() {
+    $$('.typing [data-type]').forEach(el => {
+      const text = el.textContent.trim();
+      el.setAttribute('aria-label', text);
+      el.innerHTML = [...text].map((c, i) => `<span class="ch" style="--i:${i}" aria-hidden="true">${esc(c)}</span>`).join('')
+        + `<span class="caret" style="--n:${text.length}" aria-hidden="true"></span>`;
+    });
+  }
+
+  /* ---------- Page chrome: header, drawer, language menu, reveal ---------- */
   function initChrome() {
-    const nav = $('#nav'), toggle = $('#navToggle');
-    if (nav && !nav.classList.contains('nav--solid')) {
-      const onScroll = () => nav.classList.toggle('is-scrolled', scrollY > 30);
+    const header = $('#nav');
+    if (header) {
+      const onScroll = () => header.classList.toggle('is-scrolled', scrollY > 10);
       addEventListener('scroll', onScroll, { passive: true }); onScroll();
     }
-    if (toggle) {
-      const setOpen = (open) => { nav.classList.toggle('is-open', open); toggle.setAttribute('aria-expanded', open); document.body.style.overflow = open ? 'hidden' : ''; };
-      toggle.addEventListener('click', () => setOpen(!nav.classList.contains('is-open')));
-      $$('#mobileMenu a').forEach(a => a.addEventListener('click', () => setOpen(false)));
+    const drawer = $('#drawerNav');
+    if (drawer) {
+      const setOpen = (open) => {
+        drawer.classList.toggle('is-open', open); drawer.setAttribute('aria-hidden', String(!open));
+        document.body.style.overflow = open ? 'hidden' : '';
+      };
+      $('#menuOpen')?.addEventListener('click', () => setOpen(true));
+      $$('[data-close-menu], a', drawer).forEach(el => el.addEventListener('click', () => setOpen(false)));
       addEventListener('keydown', e => { if (e.key === 'Escape') setOpen(false); });
+    }
+    const ls = $('#langsel');
+    if (ls) {
+      const btn = $('.langsel__btn', ls);
+      const set = (open) => { ls.classList.toggle('is-open', open); btn.setAttribute('aria-expanded', String(open)); };
+      btn.addEventListener('click', (e) => { e.stopPropagation(); set(!ls.classList.contains('is-open')); });
+      document.addEventListener('click', () => set(false));
     }
     $$('[data-lang]').forEach(b => b.addEventListener('click', () => setLang(b.dataset.lang)));
     $$('[data-year]').forEach(el => { el.textContent = new Date().getFullYear(); });
+    renderMocks();
+    typeLogo();
   }
   const io = 'IntersectionObserver' in window
     ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } }), { threshold: .1 })
@@ -205,6 +239,6 @@ window.INV = (() => {
     loadSettings();
   }
 
-  return { sb, cfg, $, $$, esc, pick, ui, fmtDate, markdown, design, media, postCard, waLink, reveal, onLang, init,
+  return { sb, cfg, $, $$, esc, pick, ui, fmtDate, markdown, design, media, postCard, renderMocks, waLink, reveal, onLang, init,
     get lang() { return lang; }, get settings() { return settings; } };
 })();

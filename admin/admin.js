@@ -33,7 +33,7 @@
     if (!isAdmin) { await sb.auth.signOut(); return showLogin('Akun ini belum terdaftar di tabel admins.'); }
     $('#loginView').hidden = true; $('#appView').hidden = false;
     $('#who').textContent = session.user.email;
-    loadPortfolio(); loadArticles(); loadSettings();
+    loadPortfolio(); loadArticles(); loadSubscribers(); loadSettings();
   }
   $('#loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -226,7 +226,7 @@
         ${i18nField('excerpt', 'Ringkasan', a.excerpt, { type: 'textarea' })}
         ${i18nField('content', 'Isi artikel', a.content, { type: 'textarea', cls: 'tall', ph: 'Tulis dengan format Markdown…' })}
         <div class="md-help"><b>Format:</b> <code>## Subjudul</code> · <code>**tebal**</code> · <code>*miring*</code> · <code>- daftar</code> · <code>[teks](https://link)</code> · <code>![alt](url-gambar)</code> · <code>&gt; kutipan</code></div>
-        <div><button type="button" class="btn btn--ghost btn--sm" id="togglePreview">Pratinjau</button></div>
+        <div><button type="button" class="btn btn--outline btn--sm" id="togglePreview">Pratinjau</button></div>
         <div class="preview-pane prose" id="mdPreview" hidden></div>
       </div>
       <div class="box"><b>Cover</b>
@@ -316,6 +316,32 @@
     kind === 'portfolio' ? loadPortfolio() : loadArticles();
   });
 
+  /* ================= SUBSCRIBERS ================= */
+  let subscribers = [];
+  async function loadSubscribers() {
+    const { data, error } = await sb.from('subscribers').select('*').order('created_at', { ascending: false });
+    subscribers = data || [];
+    $('#subscribersList').innerHTML = error
+      ? `<div class="empty-state">Gagal memuat: ${esc(error.message)}<br>Pastikan <code>supabase/schema.sql</code> versi terbaru sudah dijalankan.</div>`
+      : !subscribers.length ? '<div class="empty-state">Belum ada pelanggan.</div>'
+      : `<p class="hint">${subscribers.length} pelanggan</p>` + subscribers.map(s => `
+        <div class="sub-row"><span>${esc(s.email)}<small>${esc((s.lang || '').toUpperCase())} · ${new Date(s.created_at).toLocaleDateString('id-ID')}</small></span>
+        <button type="button" data-unsub="${s.id}">Hapus</button></div>`).join('');
+  }
+  $('#subscribersList').addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-unsub]'); if (!b) return;
+    const s = subscribers.find(x => x.id === b.dataset.unsub);
+    if (!confirm(`Hapus ${s?.email}?`)) return;
+    const { error } = await sb.from('subscribers').delete().eq('id', b.dataset.unsub);
+    if (error) return toast(error.message, true);
+    toast('Dihapus'); loadSubscribers();
+  });
+  $('#copyEmails').addEventListener('click', async () => {
+    if (!subscribers.length) return toast('Belum ada email.', true);
+    try { await navigator.clipboard.writeText(subscribers.map(s => s.email).join(', ')); toast('Email disalin ✓'); }
+    catch { toast('Gagal menyalin, browser tidak mengizinkan.', true); }
+  });
+
   /* ================= APPEARANCE ================= */
   const sForm = $('#settingsForm');
   $('#fontChoices').innerHTML = Object.entries(window.FONT_PRESETS).map(([key, p]) => `
@@ -339,7 +365,7 @@
     current = { ...window.DEFAULT_SETTINGS, ...v, sections: { ...window.DEFAULT_SETTINGS.sections, ...(v.sections || {}) } };
     const f = sForm.elements;
     (sForm.querySelector(`input[name="font"][value="${current.font}"]`) || sForm.querySelector('input[name="font"]')).checked = true;
-    f.accent.value = current.accent || '#C9A45C';
+    f.accent.value = current.accent || '#6B4A35';
     f.wa_number.value = current.wa_number || '';
     f.instagram.value = current.instagram || '';
     Object.entries(current.sections).forEach(([k, on]) => { if (f[`sec_${k}`]) f[`sec_${k}`].checked = on; });
@@ -349,7 +375,7 @@
   $('#saveSettings').addEventListener('click', async () => {
     const f = sForm.elements;
     const value = {
-      font: f.font.value || 'modern',
+      font: f.font.value || 'warm',
       accent: f.accent.value,
       wa_number: f.wa_number.value.replace(/\D/g, ''),
       instagram: f.instagram.value.trim().replace(/^@/, ''),

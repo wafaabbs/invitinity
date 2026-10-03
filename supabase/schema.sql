@@ -118,12 +118,36 @@ drop policy if exists "media admin delete" on storage.objects;
 create policy "media admin delete" on storage.objects for delete to authenticated
   using (bucket_id = 'media' and public.is_admin());
 
+-- ---------- Newsletter subscribers ----------
+-- Pengunjung boleh mendaftar (insert), tapi hanya admin yang bisa melihat/menghapus.
+create table if not exists public.subscribers (
+  id uuid primary key default gen_random_uuid(),
+  email text unique not null check (email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$' and length(email) <= 254),
+  lang text check (lang in ('id', 'en', 'ms')),
+  created_at timestamptz not null default now()
+);
+alter table public.subscribers enable row level security;
+
+drop policy if exists "subscribers public insert" on public.subscribers;
+create policy "subscribers public insert" on public.subscribers for insert to anon, authenticated
+  with check (true);
+drop policy if exists "subscribers admin read" on public.subscribers;
+create policy "subscribers admin read" on public.subscribers for select to authenticated using (public.is_admin());
+drop policy if exists "subscribers admin delete" on public.subscribers;
+create policy "subscribers admin delete" on public.subscribers for delete to authenticated using (public.is_admin());
+
 -- =====================================================================
--- SEED DATA (hanya ditambahkan jika belum ada)
+-- SEED DATA
 -- =====================================================================
 
 -- Settings
-insert into public.settings (key, value) values ('site', '{"font":"modern","accent":"#C9A45C","wa_number":"","instagram":"invitinity","hero_title":{"id":"","en":"","ms":""},"hero_subtitle":{"id":"","en":"","ms":""},"sections":{"testimonials":true,"packages":true,"articles":true,"instagram":true,"faq":true}}'::jsonb) on conflict (key) do nothing;
+insert into public.settings (key, value) values ('site', '{"font":"warm","accent":"#6B4A35","wa_number":"","instagram":"invitinity","hero_title":{"id":"","en":"","ms":""},"hero_subtitle":{"id":"","en":"","ms":""},"sections":{"testimonials":true,"packages":true,"articles":true,"instagram":true,"faq":true}}'::jsonb) on conflict (key) do nothing;
+
+-- Upgrade: pindahkan setting lama (Playfair + gold) ke tema Warm Boutique (Cormorant + Jost, cokelat).
+-- Hanya berlaku jika setting belum pernah diubah dari bawaan lama.
+update public.settings
+set value = value || '{"font":"warm","accent":"#6B4A35"}'::jsonb
+where key = 'site' and value->>'font' = 'modern' and value->>'accent' = '#C9A45C';
 
 -- Portfolio
 insert into public.portfolio (slug,title,description,features,categories,theme,kicker,names,event_date,place,sort_order,published) values ('ethereal-bloom','{"id":"Ethereal Bloom","en":"Ethereal Bloom","ms":"Ethereal Bloom"}'::jsonb,'{"id":"Nuansa romantis dengan bingkai lengkung, palet blush dan aksen champagne gold.","en":"A romantic feel with an arch frame, blush palette and champagne gold accents.","ms":"Suasana romantik dengan bingkai melengkung, palet merah jambu lembut dan aksen emas champagne."}'::jsonb,'{"id":["Animasi pembuka amplop","Love story timeline","RSVP & ucapan tamu"],"en":["Envelope opening animation","Love story timeline","RSVP & guest wishes"],"ms":["Animasi pembukaan sampul","Garis masa kisah cinta","RSVP & ucapan tetamu"]}'::jsonb,array['wedding','luxury']::text[],'bloom','The Wedding of','Alya & Raka','12 · 12 · 2026','Bandung',1,true) on conflict (slug) do nothing;

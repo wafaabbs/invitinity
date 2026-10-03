@@ -3,6 +3,11 @@
    supabase/schema.sql has been run). The same items are seeded into the DB. */
 
 window.FONT_PRESETS = {
+  warm: {
+    label: 'Warm Boutique — Cormorant Garamond + Jost',
+    serif: '"Cormorant Garamond", Georgia, serif', sans: '"Jost", system-ui, sans-serif',
+    href: 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500;600&display=swap',
+  },
   modern: {
     label: 'Modern — Playfair Display + Inter',
     serif: '"Playfair Display", Georgia, serif', sans: '"Inter", system-ui, sans-serif',
@@ -26,8 +31,8 @@ window.FONT_PRESETS = {
 };
 
 window.DEFAULT_SETTINGS = {
-  font: 'modern',
-  accent: '#C9A45C',
+  font: 'warm',
+  accent: '#6B4A35',
   wa_number: '',
   instagram: 'invitinity',
   hero_title: { id: '', en: '', ms: '' },

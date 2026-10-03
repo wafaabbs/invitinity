@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <title>CMS | Invitinity</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%23151515'/%3E%3Cpath d='M12 12c-2-2.7-3.8-4-5.5-4a4 4 0 0 0 0 8c1.7 0 3.5-1.3 5.5-4Zm0 0c2 2.7 3.8 4 5.5 4a4 4 0 0 0 0-8c-1.7 0-3.5 1.3-5.5 4Z' fill='none' stroke='%23C9A45C' stroke-width='1.6'/%3E%3C/svg%3E">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%233B2A20'/%3E%3Cpath d='M12 12c-2-2.7-3.8-4-5.5-4a4 4 0 0 0 0 8c1.7 0 3.5-1.3 5.5-4Zm0 0c2 2.7 3.8 4 5.5 4a4 4 0 0 0 0-8c-1.7 0-3.5 1.3-5.5 4Z' fill='none' stroke='%23C9A45C' stroke-width='1.6'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <!-- All font presets, so the Appearance tab can preview them -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Plus+Jakarta+Sans:wght@400;500&family=Libre+Baskerville:ital@0;1&family=Montserrat:wght@400;500&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Plus+Jakarta+Sans:wght@400;500&family=Libre+Baskerville:ital@0;1&family=Montserrat:wght@400;500&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500&display=swap">
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="admin.css">
 </head>
@@ -18,7 +18,7 @@
   <!-- LOGIN -->
   <section class="login" id="loginView" hidden>
     <form class="login__card" id="loginForm">
-      <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 12c-2-2.7-3.8-4-5.5-4a4 4 0 0 0 0 8c1.7 0 3.5-1.3 5.5-4Zm0 0c2 2.7 3.8 4 5.5 4a4 4 0 0 0 0-8c-1.7 0-3.5 1.3-5.5 4Z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>INVITINITY</div>
+      <div class="wordmark"><span class="wordmark__name">Invitinity</span><span class="wordmark__tag">CMS</span></div>
       <h1>Masuk CMS</h1>
       <label>Email<input type="email" name="email" autocomplete="username" required></label>
       <label>Password<input type="password" name="password" autocomplete="current-password" required></label>
@@ -30,14 +30,15 @@
   <!-- APP -->
   <div class="app" id="appView" hidden>
     <header class="topbar">
-      <div class="logo"><svg viewBox="0 0 24 24"><path d="M12 12c-2-2.7-3.8-4-5.5-4a4 4 0 0 0 0 8c1.7 0 3.5-1.3 5.5-4Zm0 0c2 2.7 3.8 4 5.5 4a4 4 0 0 0 0-8c-1.7 0-3.5 1.3-5.5 4Z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>CMS</div>
+      <div class="wordmark"><span class="wordmark__name" style="font-size:26px">Invitinity</span><span class="wordmark__tag">CMS</span></div>
       <nav class="tabs" role="tablist">
         <button role="tab" data-tab="portfolio" aria-selected="true">Portofolio</button>
         <button role="tab" data-tab="articles" aria-selected="false">Artikel</button>
+        <button role="tab" data-tab="subscribers" aria-selected="false">Pelanggan</button>
         <button role="tab" data-tab="appearance" aria-selected="false">Tampilan</button>
       </nav>
       <div class="topbar__right">
-        <a href="../index.html" target="_blank" class="btn btn--ghost btn--sm">Lihat website ↗</a>
+        <a href="../index.html" target="_blank" class="btn btn--outline btn--sm">Lihat website ↗</a>
         <span class="who" id="who"></span>
         <button class="btn btn--sm" id="logout">Keluar</button>
       </div>
@@ -62,6 +63,15 @@
         <div class="list" id="articlesList"></div>
       </section>
 
+      <!-- SUBSCRIBERS -->
+      <section data-panel="subscribers" hidden>
+        <div class="panel__head">
+          <div><h2>Pelanggan Newsletter</h2><p class="hint">Email yang mendaftar lewat form newsletter di footer.</p></div>
+          <button class="btn btn--outline" id="copyEmails">Salin semua email</button>
+        </div>
+        <div class="list" id="subscribersList"></div>
+      </section>
+
       <!-- APPEARANCE -->
       <section data-panel="appearance" hidden>
         <div class="panel__head">
@@ -77,11 +87,11 @@
             <legend>Warna aksen</legend>
             <div class="swatches">
               <input type="color" name="accent" id="accent">
-              <button type="button" data-swatch="#C9A45C" style="--c:#C9A45C" title="Champagne Gold"></button>
-              <button type="button" data-swatch="#B98B82" style="--c:#B98B82" title="Rose Gold"></button>
+              <button type="button" data-swatch="#6B4A35" style="--c:#6B4A35" title="Mocha (default)"></button>
+              <button type="button" data-swatch="#8B5E3C" style="--c:#8B5E3C" title="Cokelat"></button>
+              <button type="button" data-swatch="#A47148" style="--c:#A47148" title="Caramel"></button>
+              <button type="button" data-swatch="#4A3427" style="--c:#4A3427" title="Espresso"></button>
               <button type="button" data-swatch="#7A2638" style="--c:#7A2638" title="Burgundy"></button>
-              <button type="button" data-swatch="#8A9A7B" style="--c:#8A9A7B" title="Sage"></button>
-              <button type="button" data-swatch="#151515" style="--c:#151515" title="Black"></button>
             </div>
           </fieldset>
           <fieldset class="two">
@@ -120,9 +130,9 @@
       </header>
       <div class="drawer__body" id="editorBody"></div>
       <footer class="drawer__foot">
-        <button type="button" class="btn btn--ghost btn--sm danger" id="deleteBtn">Hapus</button>
+        <button type="button" class="btn btn--outline btn--sm danger" id="deleteBtn">Hapus</button>
         <span style="flex:1"></span>
-        <button type="button" class="btn btn--ghost btn--sm" data-close-drawer>Batal</button>
+        <button type="button" class="btn btn--outline btn--sm" data-close-drawer>Batal</button>
         <button type="submit" class="btn btn--sm">Simpan</button>
       </footer>
     </form>
