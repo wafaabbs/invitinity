@@ -1,0 +1,9 @@
+# Reference pages from other websites — not part of this project
+konsep*.html
+_archive/
+
+node_modules/
+.DS_Store
+Thumbs.db
+.env
+.env.*
