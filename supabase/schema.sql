@@ -156,6 +156,8 @@ create table if not exists public.page_views (
   city text check (length(city) <= 80),
   timezone text check (length(timezone) <= 60)
 );
+-- Nama jaringan/ISP (mis. Telkomsel, Biznet) untuk membedakan pengunjung asli dari server/VPN.
+alter table public.page_views add column if not exists org text check (length(org) <= 100);
 create index if not exists page_views_created_at_idx on public.page_views (created_at desc);
 alter table public.page_views enable row level security;
 

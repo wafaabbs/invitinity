@@ -69,7 +69,7 @@
     const body = $('#statsBody');
     const [{ data: s, error }, { data: recent }] = await Promise.all([
       sb.rpc('visitor_stats', { p_days: days }),
-      sb.from('page_views').select('created_at,path,city,region,country,device,browser,os,referrer').order('created_at', { ascending: false }).limit(30),
+      sb.from('page_views').select('*').order('created_at', { ascending: false }).limit(30),
     ]);
     if (error) { body.innerHTML = notReady(error); return; }
     const range = days === 1 ? 'hari ini' : `${days} hari terakhir`;
@@ -93,9 +93,9 @@
       <div class="box">
         <b>Akses terbaru</b>
         ${recent?.length ? `<div class="table-wrap"><table class="table">
-          <thead><tr><th>Waktu (WIB)</th><th>Halaman</th><th>Lokasi</th><th>Perangkat</th><th>Sumber</th></tr></thead>
+          <thead><tr><th>Waktu (WIB)</th><th>Halaman</th><th>Lokasi</th><th>Jaringan</th><th>Perangkat</th><th>Sumber</th></tr></thead>
           <tbody>${recent.map(r => `<tr>
-            <td>${fmtTime(r.created_at)}</td><td>${esc(pageLabel(r.path))}</td><td>${esc(place(r))}</td>
+            <td>${fmtTime(r.created_at)}</td><td>${esc(pageLabel(r.path))}</td><td>${esc(place(r))}</td><td>${esc(r.org || '-')}</td>
             <td>${esc([DEVICE[r.device] || r.device, r.browser, r.os].filter(Boolean).join(' · '))}</td><td>${esc(r.referrer || 'Langsung')}</td>
           </tr>`).join('')}</tbody></table></div>` : '<p class="hint">Belum ada kunjungan tercatat.</p>'}
       </div>`;

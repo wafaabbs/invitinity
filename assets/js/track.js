@@ -2,7 +2,8 @@
    - One page_views row per page load: page, referrer host, device/browser/OS, language,
      and city/country from an IP geolocation lookup (the IP itself is never stored).
    - Uncaught errors, failed resources and Supabase errors go to error_logs.
-   Bots/headless browsers and datacenter networks are skipped; a view is only recorded after real interaction.
+   Bots, headless browsers, datacenter and VPN networks are skipped: views and errors are only sent after a
+   real (trusted) interaction from a normal ISP network.
    Opt-out: the CMS sets localStorage inv_notrack=1 for admins so their visits don't count. */
 (() => {
   const sb = window.INV?.sb;
@@ -65,32 +66,66 @@
 
   // Cloud/hosting networks: visits from here are servers (crawlers, scanners, headless bots), not people.
   // Cloudflare & Akamai are left out on purpose: iCloud Private Relay (real iPhone users) exits through them.
-  const DATACENTER = /amazon|aws|google|microsoft|azure|digitalocean|linode|ovh|hetzner|vultr|choopa|constant company|oracle|alibaba|tencent|huawei cloud|contabo|scaleway|online s\.a\.s|leaseweb|hostinger|ionos|godaddy|rackspace|softlayer|ibm cloud|datacamp|zenlayer|cogent|hurricane electric|psychz|quadranet|colocrossing|m247 ltd hosting/i;
+  // VPN exit networks are included too: their location is the VPN server's, not the visitor's.
+  const DATACENTER = new RegExp([
+    'amazon', 'aws', 'google', 'microsoft', 'azure', 'digitalocean', 'linode', 'ovh', 'hetzner', 'vultr', 'choopa', 'constant company',
+    'oracle', 'alibaba', 'tencent', 'huawei cloud', 'contabo', 'scaleway', 'online s\.a\.s', 'leaseweb', 'hostinger', 'ionos', 'godaddy',
+    'rackspace', 'softlayer', 'ibm cloud', 'datacamp', 'zenlayer', 'cogent', 'hurricane electric', 'psychz', 'quadranet', 'colocrossing',
+    'm247', 'packethub', 'tzulo', 'clouvider', 'g-core', 'gcore', 'stark industries', 'pq hosting', 'aeza', 'frantech', 'buyvm',
+    'servers\.com', 'latitude\.sh', 'equinix', 'hydra communications', 'cdn77', 'datapacket', 'nforce', 'worldstream', 'serverius',
+    'i3d', 'hostkey', 'selectel', 'timeweb', 'melbicom', 'sharktech', 'ponynet', 'zscaler', 'fastly', 'hostwinds', 'ionos',
+  ].join('|'), 'i');
+
+  // Country fallback from the device time zone when the geolocation service is blocked (e.g. by an ad blocker).
+  const TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+  const TZ_COUNTRY = {
+    'Asia/Jakarta': ['Indonesia', 'ID'], 'Asia/Pontianak': ['Indonesia', 'ID'], 'Asia/Makassar': ['Indonesia', 'ID'], 'Asia/Jayapura': ['Indonesia', 'ID'],
+    'Asia/Kuala_Lumpur': ['Malaysia', 'MY'], 'Asia/Kuching': ['Malaysia', 'MY'], 'Asia/Singapore': ['Singapore', 'SG'], 'Asia/Brunei': ['Brunei', 'BN'],
+  };
+
+  /* ---------- Human gate ----------
+     Resolves once with the geo data when a real person is here: a trusted interaction (not script-generated,
+     and not an automatic scroll right after load) from a non-datacenter network. Resolves null for bots. */
+  const loadedAt = performance.now();
+  const human = disabled ? Promise.resolve(null) : new Promise((resolve) => {
+    const EVENTS = ['scroll', 'pointermove', 'pointerdown', 'touchstart', 'keydown'];
+    const once = (e) => {
+      if (!e.isTrusted || (e.type === 'scroll' && performance.now() - loadedAt < 1200)) return;
+      EVENTS.forEach(ev => removeEventListener(ev, once, true));
+      geo().then(g => resolve(g.org && DATACENTER.test(g.org) ? null : g), () => resolve({}));
+    };
+    EVENTS.forEach(ev => addEventListener(ev, once, { capture: true, passive: true }));
+  });
 
   async function recordView() {
-    const g = await geo();
-    if (g.org && DATACENTER.test(g.org)) return;
-    await sb.from('page_views').insert({
+    const g = await human;
+    if (!g) return;
+    const fallback = !g.country && TZ_COUNTRY[TZ];
+    const row = {
       visitor_id: visitorId, session_id: sessionId, path: cut(path, 300), referrer: cut(referrer, 200),
       lang: cut(window.INV?.lang || document.documentElement.lang, 8), device, browser, os,
-      country: cut(g.country, 80), country_code: cut((g.country_code || '').toUpperCase(), 2) || null,
-      region: cut(g.region, 80), city: cut(g.city, 80),
-      timezone: cut(Intl.DateTimeFormat().resolvedOptions().timeZone, 60),
-    });
+      country: cut(g.country || (fallback && fallback[0]), 80),
+      country_code: cut((g.country_code || (fallback && fallback[1]) || '').toUpperCase(), 2) || null,
+      region: cut(g.region, 80), city: cut(g.city, 80), timezone: cut(TZ, 60), org: cut(g.org, 100),
+    };
+    const { error } = await sb.from('page_views').insert(row);
+    // Older databases without the "org" column: save the visit without it.
+    if (error && /org/.test(error.message || '')) { delete row.org; await sb.from('page_views').insert(row); }
   }
 
   /* ---------- Error log ---------- */
+  // Errors wait for the human gate, so bots (which often block images on purpose) don't fill the log.
   const seen = new Set(); let sent = 0;
   function logError(kind, message, extra = {}) {
     if (disabled || !message || sent >= 10) return;
     const key = kind + message + (extra.source || '');
     if (seen.has(key)) return;
     seen.add(key); sent++;
-    sb.from('error_logs').insert({
+    human.then(g => g && sb.from('error_logs').insert({
       kind, message: cut(message, 1000), path: cut(path, 300), source: cut(extra.source, 300),
       line: extra.line ?? null, col: extra.col ?? null, stack: cut(extra.stack, 4000),
       browser, os, device, visitor_id: visitorId,
-    }).then(() => {}, () => {});
+    })).then(() => {}, () => {});
   }
   if (window.INV) window.INV.logError = logError;
 
@@ -117,11 +152,5 @@
     logError('promise', r?.message || String(r), { stack: r?.stack });
   });
 
-  // Count a visit only after real interaction (scroll, touch, mouse, key): bots that render
-  // the page rarely do this, so datacenter crawlers stay out of the stats.
-  if (!disabled) {
-    const EVENTS = ['scroll', 'pointermove', 'pointerdown', 'touchstart', 'keydown'];
-    const once = () => { EVENTS.forEach(ev => removeEventListener(ev, once, true)); recordView().catch(() => {}); };
-    EVENTS.forEach(ev => addEventListener(ev, once, { capture: true, passive: true }));
-  }
+  if (!disabled) recordView().catch(() => {});
 })();
