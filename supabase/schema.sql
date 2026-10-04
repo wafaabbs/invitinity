@@ -278,4 +278,5 @@ insert into public.articles (slug,title,excerpt,content,published,published_at) 
 -- ADMIN — ganti dengan email akun admin CMS kamu (huruf kecil semua).
 -- Buat juga user dengan email yang sama di: Authentication → Users → Add user.
 -- =====================================================================
-insert into public.admins (email) values ('GANTI_DENGAN_EMAIL_ADMIN@gmail.com') on conflict do nothing;
+insert into public.admins (email) values ('admin1@example.com') on conflict do nothing;
+insert into public.admins (email) values ('admin2@example.com') on conflict do nothing;
