@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Walimatul ‘Ursy Hana &amp; Faris | Raudhah · Invitinity</title>
+  <meta name="description" content="Demo undangan digital Raudhah dari Invitinity: pernikahan islami dengan nuansa hijau zamrud dan krem.">
+  <meta name="theme-color" content="#23443b">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23701c45'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-size='20' fill='%23ffffff'%3EI%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Marcellus&family=Lato:wght@400;700&display=swap">
+  <link rel="stylesheet" href="../assets/demo.css">
+  <style>
+    :root {
+      --bg: #e4ebe6; --paper: #fbf9f3; --tint: #eff3ec; --ink: #24352f; --muted: #6f7f78;
+      --accent: #2f5d50; --line: rgba(47, 93, 80, .18);
+      --cover-bg: radial-gradient(80% 60% at 50% 35%, #3b7464, #2f5d50 50%, #1d3a32);
+      --cover-btn: #2f5d50;
+      --f-display: "Marcellus", Georgia, serif; --f-body: "Lato", system-ui, sans-serif;
+      --display-weight: 400; --display-style: normal; --radius: 999px;
+    }
+    .display { letter-spacing: .02em; }
+    .cover__names, .hero__names { font-size: clamp(46px, 13vw, 64px); }
+    .gold { color: #b08d4f; }
+    .bismillah { font-family: "Amiri", serif; font-size: 30px; color: var(--accent); direction: rtl; margin-bottom: 6px; }
+    .salam { font-style: italic; color: var(--muted); }
+    .event, .gift, .wish, .rsvp input, .rsvp select, .rsvp textarea { border-radius: 18px; }
+    .countdown div { border-radius: 16px; }
+    .monogram { border-radius: 999px 999px 18px 18px; }
+    .event { outline: 0; border-top: 3px solid var(--accent); }
+    .gallery > div { border-radius: 14px; }
+    .gallery > div:nth-child(1) { --g: linear-gradient(160deg, #dfe8df, #c8d8cc); }
+    .gallery > div:nth-child(2) { --g: linear-gradient(160deg, #2f5d50, #1d3a32); color: #fbf9f3; }
+    .gallery > div:nth-child(3) { --g: #eff3ec; }
+    .gallery > div:nth-child(4) { --g: linear-gradient(160deg, #e8dcc2, #f5eedd); color: #8a6a32; }
+    .gallery > div:nth-child(5) { --g: linear-gradient(160deg, #3b7464, #2f5d50); color: #fbf9f3; }
+    .gallery > div:nth-child(6) { --g: #e4ebe6; }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="star" viewBox="-50 -50 100 100" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="-30" y="-30" width="60" height="60"/><rect x="-30" y="-30" width="60" height="60" transform="rotate(45)"/><circle r="12"/>
+    </symbol>
+    <symbol id="geo" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1.1">
+      <path d="M0 150A150 150 0 0 1 150 0M0 120A120 120 0 0 1 120 0M0 90A90 90 0 0 1 90 0"/>
+      <use href="#star" x="18" y="18" width="44" height="44"/>
+      <use href="#star" x="128" y="10" width="26" height="26"/><use href="#star" x="10" y="128" width="26" height="26"/>
+      <use href="#star" x="160" y="40" width="16" height="16"/><use href="#star" x="40" y="160" width="16" height="16"/>
+    </symbol>
+    <symbol id="divider" viewBox="0 0 160 20" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round">
+      <path d="M4 10h54M102 10h54"/><use href="#star" x="68" y="-2" width="24" height="24"/>
+    </symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+  </svg>
+
+  <!-- COVER -->
+  <section class="cover" id="cover">
+    <svg class="orn orn--corner orn--tl"><use href="#geo"/></svg>
+    <svg class="orn orn--corner orn--br"><use href="#geo"/></svg>
+    <div class="cover__inner">
+      <span class="kicker">Walimatul ‘Ursy</span>
+      <h1 class="cover__names display">Hana<span class="amp">&amp;</span>Faris</h1>
+      <svg class="orn" style="width:130px"><use href="#divider"/></svg>
+      <span class="cover__date">17 · 04 · 2027</span>
+      <span class="cover__to">Kepada Yth. Bapak/Ibu/Saudara/i</span>
+      <span class="cover__guest" data-guest="Tamu Undangan">Tamu Undangan</span>
+      <span class="cover__note">Mohon maaf bila ada kesalahan penulisan nama dan gelar.</span>
+      <button class="btn-open" id="openInvite" type="button"><svg><use href="#i-mail"/></svg> Buka Undangan</button>
+    </div>
+  </section>
+
+  <main class="invite">
+    <!-- HERO -->
+    <section class="sec hero">
+      <svg class="orn orn--corner orn--tl"><use href="#geo"/></svg>
+      <svg class="orn orn--corner orn--br"><use href="#geo"/></svg>
+      <div class="hero__inner rv">
+        <span class="kicker">Pernikahan</span>
+        <h2 class="hero__names display">Hana<span class="amp">&amp;</span>Faris</h2>
+        <svg class="orn" style="width:140px"><use href="#divider"/></svg>
+        <span class="hero__date">SABTU · 17 APRIL 2027</span>
+        <span class="scroll-hint">Gulir ke bawah</span>
+      </div>
+    </section>
+
+    <!-- VERSE -->
+    <section class="sec sec--tint">
+      <div class="rv">
+        <p class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+        <p class="verse__ar">وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً ۚ إِنَّ فِي ذَٰلِكَ لَآيَاتٍ لِّقَوْمٍ يَتَفَكَّرُونَ</p>
+        <p class="verse__text">“Di antara tanda-tanda (kebesaran)-Nya ialah bahwa Dia menciptakan pasangan-pasangan untukmu dari (jenis) dirimu sendiri agar kamu merasa tenteram kepadanya. Dia menjadikan di antara kamu rasa cinta dan kasih sayang. Sesungguhnya pada yang demikian itu benar-benar terdapat tanda-tanda (kebesaran Allah) bagi kaum yang berpikir.”</p>
+        <p class="verse__src">QS. Ar-Rum: 21</p>
+      </div>
+    </section>
+
+    <!-- COUPLE -->
+    <section class="sec">
+      <div class="rv">
+        <p class="salam">Assalamu’alaikum Warahmatullahi Wabarakatuh</p>
+        <h2 class="sec__title display">Kedua Mempelai</h2>
+        <p class="lead muted">Dengan memohon rahmat dan ridha Allah Subhanahu wa Ta’ala, kami bermaksud menyelenggarakan pernikahan putra-putri kami:</p>
+      </div>
+      <div class="people">
+        <div class="person rv">
+          <div class="monogram">H</div>
+          <h3 class="person__name display">Hana Nur Aisyah</h3>
+          <p class="person__parents">Putri pertama dari Bapak H. Ahmad Fauzi<br>&amp; Ibu Hj. Siti Maryam</p>
+          <a class="person__ig" href="#" onclick="return false">@hananuraisyah</a>
+        </div>
+        <div class="people__amp rv">&amp;</div>
+        <div class="person rv">
+          <div class="monogram">F</div>
+          <h3 class="person__name display">Faris Abdurrahman</h3>
+          <p class="person__parents">Putra kedua dari Bapak Ir. Yusuf Hidayat<br>&amp; Ibu Aminah</p>
+          <a class="person__ig" href="#" onclick="return false">@farisabdurrahman</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- COUNTDOWN -->
+    <section class="sec sec--accent">
+      <div class="rv">
+        <span class="kicker">Insya Allah akan dilaksanakan</span>
+        <h2 class="sec__title display">Menghitung Hari</h2>
+        <div class="countdown" data-countdown="2027-04-17T08:00:00+07:00">
+          <div><b>00</b><span>Hari</span></div><div><b>00</b><span>Jam</span></div><div><b>00</b><span>Menit</span></div><div><b>00</b><span>Detik</span></div>
+        </div>
+        <a class="btn btn--ghost" data-cal="Walimatul 'Ursy Hana & Faris" data-cal-start="2027-04-17T08:00:00+07:00" data-cal-end="2027-04-17T13:00:00+07:00" data-cal-place="Masjid Al-Ikhlas, Yogyakarta">Simpan ke Kalender</a>
+      </div>
+    </section>
+
+    <!-- EVENTS -->
+    <section class="sec sec--tint">
+      <div class="rv">
+        <span class="kicker">Rangkaian acara</span>
+        <h2 class="sec__title display">Waktu &amp; Tempat</h2>
+      </div>
+      <div class="events">
+        <article class="event rv">
+          <h3 class="event__name display">Akad Nikah</h3>
+          <p class="event__date">Sabtu, 17 April 2027</p>
+          <p class="event__time">08.00 – 09.30 WIB</p>
+          <p class="event__place">Masjid Al-Ikhlas</p>
+          <p class="event__addr">Jl. Kenanga No. 5, Sleman, Yogyakarta</p>
+          <a class="btn" href="https://maps.google.com/?q=Sleman+Yogyakarta" target="_blank" rel="noopener">Lihat Lokasi</a>
+        </article>
+        <article class="event rv">
+          <h3 class="event__name display">Walimatul ‘Ursy</h3>
+          <p class="event__date">Sabtu, 17 April 2027</p>
+          <p class="event__time">10.30 – 13.00 WIB</p>
+          <p class="event__place">Pendopo Griya Asri</p>
+          <p class="event__addr">Jl. Kaliurang Km. 9, Sleman, Yogyakarta</p>
+          <a class="btn" href="https://maps.google.com/?q=Sleman+Yogyakarta" target="_blank" rel="noopener">Lihat Lokasi</a>
+        </article>
+      </div>
+    </section>
+
+    <!-- GALLERY -->
+    <section class="sec">
+      <div class="rv">
+        <span class="kicker">Momen bahagia</span>
+        <h2 class="sec__title display">Galeri</h2>
+      </div>
+      <div class="gallery rv"><div>H &amp; F</div><div>H</div><div>F</div><div>✦</div><div>1448</div><div>❖</div></div>
+      <p class="gallery__note">Foto kedua mempelai tampil di sini.</p>
+    </section>
+
+    <!-- GIFT -->
+    <section class="sec sec--tint">
+      <div class="rv">
+        <span class="kicker">Amplop digital</span>
+        <h2 class="sec__title display">Tanda Kasih</h2>
+        <p class="lead muted">Doa restu Anda merupakan karunia yang sangat berarti bagi kami. Bila berkenan memberikan tanda kasih, dapat melalui:</p>
+      </div>
+      <div class="gifts">
+        <div class="gift rv"><span class="gift__bank">Bank Syariah Indonesia</span><span class="gift__no">7123 4567 89</span><span class="gift__name">a.n. Hana Nur Aisyah</span><button class="btn btn--ghost" type="button" data-copy="7123456789">Salin Nomor</button></div>
+        <div class="gift rv"><span class="gift__bank">Bank Muamalat</span><span class="gift__no">3012 3456 78</span><span class="gift__name">a.n. Faris Abdurrahman</span><button class="btn btn--ghost" type="button" data-copy="3012345678">Salin Nomor</button></div>
+      </div>
+    </section>
+
+    <!-- RSVP + WISHES -->
+    <section class="sec">
+      <div class="rv">
+        <span class="kicker">Konfirmasi kehadiran</span>
+        <h2 class="sec__title display">Doa &amp; Ucapan</h2>
+      </div>
+      <form class="rsvp rv" id="rsvp" data-host="Hana & Faris" novalidate>
+        <label>Nama<input name="name" autocomplete="name" placeholder="Nama lengkap"></label>
+        <label>Kehadiran<select name="attend"><option>Hadir</option><option>Tidak hadir</option><option>Masih ragu</option></select></label>
+        <label>Jumlah tamu<select name="pax"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+        <label>Doa &amp; ucapan<textarea name="msg" placeholder="Tuliskan doa untuk kedua mempelai"></textarea></label>
+        <button class="btn" type="submit">Kirim via WhatsApp</button>
+        <p class="rsvp__note">Demo: ucapan hanya tersimpan di browser ini.</p>
+      </form>
+      <div class="wishes" id="wishes">
+        <div class="wish"><b>Ustadzah Rahma</b><small>Hadir</small><p>Barakallahu lakuma wa baraka ‘alaikuma wa jama‘a bainakuma fi khair.</p></div>
+        <div class="wish"><b>Dina &amp; Ilham</b><small>Hadir</small><p>Selamat Hana &amp; Faris! Semoga menjadi keluarga sakinah, mawaddah, warahmah.</p></div>
+        <div class="wish"><b>Om Burhan</b><small>Tidak hadir</small><p>Mohon maaf belum bisa hadir. Semoga Allah memberkahi pernikahan kalian.</p></div>
+      </div>
+    </section>
+
+    <!-- CLOSING -->
+    <section class="sec sec--tint">
+      <div class="rv">
+        <svg class="orn" style="width:140px"><use href="#divider"/></svg>
+        <p class="lead muted" style="margin-top:18px">Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir dan memberikan doa restu kepada kedua mempelai.</p>
+        <p class="salam" style="margin-top:18px">Wassalamu’alaikum Warahmatullahi Wabarakatuh</p>
+        <h2 class="closing__names display">Hana &amp; Faris</h2>
+        <p class="muted" style="font-size:13px">Keluarga Bapak H. Ahmad Fauzi &amp; Keluarga Bapak Ir. Yusuf Hidayat</p>
+      </div>
+    </section>
+    <footer class="credit">Invitation by <a href="https://invitinity.my.id/">Invitinity</a></footer>
+  </main>
+
+  <div class="demo-badge">Demo <b>Raudhah</b> · <a href="https://invitinity.my.id/">Pesan di Invitinity</a></div>
+  <script src="../assets/demo.js"></script>
+</body>
+</html>

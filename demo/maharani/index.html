@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Wedding of Salsabila &amp; Arya | Maharani · Invitinity</title>
+  <meta name="description" content="Demo undangan digital Maharani dari Invitinity: wedding elegan dengan nuansa plum dan ivory.">
+  <meta name="theme-color" content="#701c45">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23701c45'/%3E%3Ctext x='16' y='23' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-size='20' fill='%23ffffff'%3EI%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Montserrat:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="../assets/demo.css">
+  <style>
+    :root {
+      --bg: #efe6e9; --paper: #fffdfb; --tint: #f7eef1; --ink: #3d2a33; --muted: #8d7781;
+      --accent: #701c45; --line: rgba(112, 28, 69, .16);
+      --cover-bg: radial-gradient(80% 60% at 50% 35%, #8f3462, #701c45 55%, #4a1230);
+      --f-display: "Cormorant Garamond", Georgia, serif; --f-body: "Montserrat", system-ui, sans-serif;
+    }
+    .hero { background: radial-gradient(70% 50% at 50% 40%, #f7eef1, var(--paper) 70%); }
+    .hero__names { font-size: clamp(56px, 16vw, 80px); }
+    .gallery > div:nth-child(1) { --g: linear-gradient(160deg, #f1dde7, #e3bfd0); }
+    .gallery > div:nth-child(2) { --g: linear-gradient(160deg, #701c45, #4a1230); color: #fff; }
+    .gallery > div:nth-child(3) { --g: #f7eef1; }
+    .gallery > div:nth-child(4) { --g: linear-gradient(160deg, #e9d3de, #f7eef1); }
+    .gallery > div:nth-child(5) { --g: linear-gradient(160deg, #a8557d, #701c45); color: #fff; }
+    .gallery > div:nth-child(6) { --g: #efe6e9; }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="sprig" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+      <path d="M8 192C40 150 70 110 110 74S170 22 192 8"/>
+      <path d="M36 158c-10-14-8-30 4-38 6 14 4 28-4 38Z M36 158c14-6 30-2 38 10-14 6-28 2-38-10Z"/>
+      <path d="M64 124c-8-14-4-30 8-36 4 14 0 28-8 36Z M64 124c14-4 28 2 34 14-14 4-28-2-34-14Z"/>
+      <path d="M96 90c-6-14 0-28 12-32 2 14-4 26-12 32Z M96 90c14-2 26 6 30 18-14 2-26-6-30-18Z"/>
+      <path d="M130 58c-4-12 2-24 14-26 0 12-6 22-14 26Z M130 58c12 0 22 8 24 20-12 0-22-8-24-20Z"/>
+      <circle cx="160" cy="32" r="3"/><circle cx="176" cy="20" r="2"/><circle cx="150" cy="44" r="2"/>
+    </symbol>
+    <symbol id="divider" viewBox="0 0 160 20" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round">
+      <path d="M4 10h56M100 10h56"/><path d="M80 2l8 8-8 8-8-8z"/><circle cx="66" cy="10" r="2"/><circle cx="94" cy="10" r="2"/>
+    </symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+  </svg>
+
+  <!-- COVER -->
+  <section class="cover" id="cover">
+    <svg class="orn orn--corner orn--tl"><use href="#sprig"/></svg>
+    <svg class="orn orn--corner orn--br"><use href="#sprig"/></svg>
+    <div class="cover__inner">
+      <span class="kicker">The Wedding of</span>
+      <h1 class="cover__names display">Salsabila<span class="amp">&amp;</span>Arya</h1>
+      <svg class="orn" style="width:130px"><use href="#divider"/></svg>
+      <span class="cover__date">15 · 05 · 2027</span>
+      <span class="cover__to">Kepada Yth. Bapak/Ibu/Saudara/i</span>
+      <span class="cover__guest" data-guest="Tamu Undangan">Tamu Undangan</span>
+      <span class="cover__note">Mohon maaf bila ada kesalahan penulisan nama dan gelar.</span>
+      <button class="btn-open" id="openInvite" type="button"><svg><use href="#i-mail"/></svg> Buka Undangan</button>
+    </div>
+  </section>
+
+  <main class="invite">
+    <!-- HERO -->
+    <section class="sec hero">
+      <svg class="orn orn--corner orn--tl"><use href="#sprig"/></svg>
+      <svg class="orn orn--corner orn--br"><use href="#sprig"/></svg>
+      <div class="hero__inner rv">
+        <span class="kicker">Kami yang berbahagia</span>
+        <h2 class="hero__names display">Salsabila<span class="amp">&amp;</span>Arya</h2>
+        <svg class="orn" style="width:140px"><use href="#divider"/></svg>
+        <span class="hero__date">SABTU · 15 MEI 2027</span>
+        <span class="scroll-hint">Gulir ke bawah</span>
+      </div>
+    </section>
+
+    <!-- QUOTE -->
+    <section class="sec sec--tint">
+      <div class="rv">
+        <svg class="orn" style="width:140px"><use href="#divider"/></svg>
+        <p class="verse__text" style="margin-top:18px">“Cinta tidak terdiri dari saling memandang, tetapi bersama-sama memandang ke arah yang sama.”</p>
+        <p class="verse__src">Antoine de Saint-Exupéry</p>
+      </div>
+    </section>
+
+    <!-- COUPLE -->
+    <section class="sec">
+      <div class="rv">
+        <span class="kicker">Mempelai</span>
+        <h2 class="sec__title display">Bride &amp; Groom</h2>
+        <p class="lead muted">Dengan memohon rahmat dan ridha Tuhan Yang Maha Esa, kami bermaksud menyelenggarakan pernikahan putra-putri kami:</p>
+      </div>
+      <div class="people">
+        <div class="person rv">
+          <div class="monogram">S</div>
+          <h3 class="person__name display">Salsabila Putri Maharani</h3>
+          <p class="person__parents">Putri kedua dari Bapak Hendra Wijaya<br>&amp; Ibu Ratna Kusumawati</p>
+          <a class="person__ig" href="#" onclick="return false">@salsabila.pm</a>
+        </div>
+        <div class="people__amp rv">&amp;</div>
+        <div class="person rv">
+          <div class="monogram">A</div>
+          <h3 class="person__name display">Arya Dwi Pratama</h3>
+          <p class="person__parents">Putra pertama dari Bapak Bambang Pratama<br>&amp; Ibu Sri Lestari</p>
+          <a class="person__ig" href="#" onclick="return false">@aryadwip</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- COUNTDOWN -->
+    <section class="sec sec--accent">
+      <div class="rv">
+        <span class="kicker">Menuju hari bahagia</span>
+        <h2 class="sec__title display">Save the Date</h2>
+        <div class="countdown" data-countdown="2027-05-15T08:00:00+07:00">
+          <div><b>00</b><span>Hari</span></div><div><b>00</b><span>Jam</span></div><div><b>00</b><span>Menit</span></div><div><b>00</b><span>Detik</span></div>
+        </div>
+        <a class="btn btn--ghost" data-cal="Pernikahan Salsabila & Arya" data-cal-start="2027-05-15T08:00:00+07:00" data-cal-end="2027-05-15T14:00:00+07:00" data-cal-place="Gedung Sasana Harmoni, Bandung">Simpan ke Kalender</a>
+      </div>
+    </section>
+
+    <!-- EVENTS -->
+    <section class="sec sec--tint">
+      <div class="rv">
+        <span class="kicker">Rangkaian acara</span>
+        <h2 class="sec__title display">Wedding Day</h2>
+      </div>
+      <div class="events">
+        <article class="event rv">
+          <h3 class="event__name display">Akad Nikah</h3>
+          <p class="event__date">Sabtu, 15 Mei 2027</p>
+          <p class="event__time">08.00 – 10.00 WIB</p>
+          <p class="event__place">Gedung Sasana Harmoni</p>
+          <p class="event__addr">Jl. Cempaka Wangi No. 12, Bandung</p>
+          <a class="btn" href="https://maps.google.com/?q=Bandung" target="_blank" rel="noopener">Lihat Lokasi</a>
+        </article>
+        <article class="event rv">
+          <h3 class="event__name display">Resepsi</h3>
+          <p class="event__date">Sabtu, 15 Mei 2027</p>
+          <p class="event__time">11.00 – 14.00 WIB</p>
+          <p class="event__place">Gedung Sasana Harmoni</p>
+          <p class="event__addr">Jl. Cempaka Wangi No. 12, Bandung</p>
+          <a class="btn" href="https://maps.google.com/?q=Bandung" target="_blank" rel="noopener">Lihat Lokasi</a>
+        </article>
+      </div>
+    </section>
+
+    <!-- STORY -->
+    <section class="sec">
+      <div class="rv">
+        <span class="kicker">Perjalanan kami</span>
+        <h2 class="sec__title display">Our Story</h2>
+      </div>
+      <div class="story">
+        <div class="story__item rv"><span class="story__year">2021</span><h3 class="story__title">Pertama bertemu</h3><p class="muted">Berawal dari satu kepanitiaan acara kampus, obrolan singkat berlanjut menjadi pertemanan yang hangat.</p></div>
+        <div class="story__item rv"><span class="story__year">2024</span><h3 class="story__title">Menjalin komitmen</h3><p class="muted">Setelah tiga tahun saling mengenal, kami memutuskan untuk melangkah lebih serius.</p></div>
+        <div class="story__item rv"><span class="story__year">2026</span><h3 class="story__title">Lamaran</h3><p class="muted">Dengan restu kedua keluarga, lamaran berlangsung sederhana dan penuh haru.</p></div>
+      </div>
+    </section>
+
+    <!-- GALLERY -->
+    <section class="sec sec--tint">
+      <div class="rv">
+        <span class="kicker">Momen kami</span>
+        <h2 class="sec__title display">Gallery</h2>
+      </div>
+      <div class="gallery rv"><div>S&amp;A</div><div>S</div><div>A</div><div>♡</div><div>2027</div><div>✦</div></div>
+      <p class="gallery__note">Foto prewedding kamu tampil di sini.</p>
+    </section>
+
+    <!-- GIFT -->
+    <section class="sec">
+      <div class="rv">
+        <span class="kicker">Tanda kasih</span>
+        <h2 class="sec__title display">Wedding Gift</h2>
+        <p class="lead muted">Doa restu Anda adalah hadiah terindah. Namun jika ingin memberikan tanda kasih, dapat melalui:</p>
+      </div>
+      <div class="gifts">
+        <div class="gift rv"><span class="gift__bank">Bank BCA</span><span class="gift__no">1234 5678 90</span><span class="gift__name">a.n. Salsabila Putri Maharani</span><button class="btn btn--ghost" type="button" data-copy="1234567890">Salin Nomor</button></div>
+        <div class="gift rv"><span class="gift__bank">Bank Mandiri</span><span class="gift__no">0987 6543 21</span><span class="gift__name">a.n. Arya Dwi Pratama</span><button class="btn btn--ghost" type="button" data-copy="0987654321">Salin Nomor</button></div>
+      </div>
+    </section>
+
+    <!-- RSVP + WISHES -->
+    <section class="sec sec--tint">
+      <div class="rv">
+        <span class="kicker">Konfirmasi kehadiran</span>
+        <h2 class="sec__title display">RSVP &amp; Ucapan</h2>
+      </div>
+      <form class="rsvp rv" id="rsvp" data-host="Salsabila & Arya" novalidate>
+        <label>Nama<input name="name" autocomplete="name" placeholder="Nama lengkap"></label>
+        <label>Kehadiran<select name="attend"><option>Hadir</option><option>Tidak hadir</option><option>Masih ragu</option></select></label>
+        <label>Jumlah tamu<select name="pax"><option>1</option><option>2</option><option>3</option><option>4</option></select></label>
+        <label>Ucapan &amp; doa<textarea name="msg" placeholder="Tulis ucapan untuk kedua mempelai"></textarea></label>
+        <button class="btn" type="submit">Kirim via WhatsApp</button>
+        <p class="rsvp__note">Demo: ucapan hanya tersimpan di browser ini.</p>
+      </form>
+      <div class="wishes" id="wishes">
+        <div class="wish"><b>Nadya &amp; Keluarga</b><small>Hadir</small><p>Selamat menempuh hidup baru! Semoga menjadi keluarga yang sakinah, mawaddah, warahmah.</p></div>
+        <div class="wish"><b>Reza</b><small>Hadir</small><p>Happy wedding, Arya &amp; Salsa! Langgeng sampai kakek nenek.</p></div>
+        <div class="wish"><b>Tante Wulan</b><small>Tidak hadir</small><p>Maaf belum bisa hadir. Doa terbaik untuk kalian berdua.</p></div>
+      </div>
+    </section>
+
+    <!-- CLOSING -->
+    <section class="sec">
+      <div class="rv">
+        <svg class="orn" style="width:140px"><use href="#divider"/></svg>
+        <p class="lead muted" style="margin-top:18px">Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir dan memberikan doa restu.</p>
+        <p class="kicker" style="margin-top:22px">Kami yang berbahagia</p>
+        <h2 class="closing__names display">Salsabila &amp; Arya</h2>
+        <p class="muted" style="font-size:13px">Keluarga Bapak Hendra Wijaya &amp; Keluarga Bapak Bambang Pratama</p>
+      </div>
+    </section>
+    <footer class="credit">Invitation by <a href="https://invitinity.my.id/">Invitinity</a></footer>
+  </main>
+
+  <div class="demo-badge">Demo <b>Maharani</b> · <a href="https://invitinity.my.id/">Pesan di Invitinity</a></div>
+  <script src="../assets/demo.js"></script>
+</body>
+</html>

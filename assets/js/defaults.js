@@ -47,7 +47,7 @@ window.DEFAULT_SETTINGS = {
 };
 
 window.PORTFOLIO_THEMES = ['bloom', 'noir', 'line', 'velvet', 'blush', 'gala', 'ivory', 'star', 'launch', 'sakinah'];
-window.PORTFOLIO_CATEGORIES = ['wedding', 'birthday', 'corporate', 'minimalist', 'luxury'];
+window.PORTFOLIO_CATEGORIES = ['wedding', 'birthday', 'family', 'corporate', 'minimalist', 'luxury'];
 
 window.DEFAULT_PORTFOLIO = [
   { slug: 'ethereal-bloom', theme: 'bloom', categories: ['wedding', 'luxury'], kicker: 'The Wedding of', names: 'Alya & Raka', event_date: '12 · 12 · 2026', place: 'Bandung', sort_order: 1,

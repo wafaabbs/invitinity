@@ -4,7 +4,7 @@
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const LANGS = [['id', 'ID'], ['en', 'EN'], ['ms', 'MS']];
-  const CAT_LABEL = { wedding: 'Wedding', birthday: 'Ulang tahun', corporate: 'Korporat', minimalist: 'Minimalis', luxury: 'Luxury' };
+  const CAT_LABEL = { wedding: 'Wedding', birthday: 'Ulang tahun', family: 'Keluarga (khitan, aqiqah)', corporate: 'Korporat', minimalist: 'Minimalis', luxury: 'Luxury' };
   const BUCKET = INV.cfg.mediaBucket || 'media';
   const MAX_UPLOAD = 5 * 1024 * 1024;     // after resizing/compressing
   const MAX_ORIGINAL = 25 * 1024 * 1024;  // file picked by the admin
