@@ -23,6 +23,21 @@
   hero.addEventListener('mouseleave', play);
   go(0); play();
 
+  /* Auto-advance a slider while it's on screen and the visitor isn't interacting with it.
+     Returns a function that restarts the countdown (call it after a manual step). */
+  function autoplay(el, advance, ms = 4500) {
+    if (reduceMotion) return () => {};
+    let t = null, visible = false, busy = false;
+    const sync = () => { clearInterval(t); t = null; if (visible && !busy && !document.hidden) t = setInterval(() => { if (!document.querySelector('.modal.is-open')) advance(); }, ms); };
+    new IntersectionObserver(([e]) => { visible = e.isIntersecting; sync(); }, { threshold: 0.3 }).observe(el);
+    el.addEventListener('pointerenter', () => { busy = true; sync(); });
+    el.addEventListener('pointerleave', () => { busy = false; sync(); });
+    el.addEventListener('focusin', () => { busy = true; sync(); });
+    el.addEventListener('focusout', (e) => { if (!el.contains(e.relatedTarget)) { busy = false; sync(); } });
+    document.addEventListener('visibilitychange', sync);
+    return sync;
+  }
+
   /* ---------- Portfolio data ---------- */
   let works = [];
   async function loadWorks() {
@@ -30,6 +45,7 @@
       const { data, error } = await sb.from('portfolio').select('*').eq('published', true).order('sort_order', { ascending: true });
       if (!error) return data;
       console.info('Portfolio: using built-in samples (', error.message, ')');
+      INV.logError?.('supabase', `portfolio: ${error.message}`);
     }
     return window.DEFAULT_PORTFOLIO;
   }
@@ -56,11 +72,16 @@
   }
   rail.addEventListener('scroll', updateRailButtons, { passive: true });
   addEventListener('resize', updateRailButtons);
-  $$('[data-rail]').forEach(b => b.addEventListener('click', () => {
+  function railStep(dir) {
     const card = rail.firstElementChild;
     const step = card ? card.getBoundingClientRect().width + 20 : rail.clientWidth;
-    rail.scrollBy({ left: Number(b.dataset.rail) * step, behavior: reduceMotion ? 'auto' : 'smooth' });
-  }));
+    rail.scrollBy({ left: dir * step, behavior: reduceMotion ? 'auto' : 'smooth' });
+  }
+  const railAuto = autoplay(rail.parentElement, () => {
+    const atEnd = rail.scrollLeft >= rail.scrollWidth - rail.clientWidth - 2;
+    if (atEnd) rail.scrollTo({ left: 0, behavior: 'smooth' }); else railStep(1);
+  });
+  $$('[data-rail]').forEach(b => b.addEventListener('click', () => { railStep(Number(b.dataset.rail)); railAuto(); }));
   $('#filters').addEventListener('click', (e) => {
     const b = e.target.closest('.filter'); if (!b) return;
     filter = b.dataset.filter;
@@ -85,11 +106,13 @@
         <small>${esc((w.categories || []).map(labelFor).join(' · '))}</small>
       </div>`).join('');
   }
-  $$('[data-solo]').forEach(b => b.addEventListener('click', () => {
-    const n = soloItems().length; if (!n) return;
-    soloIdx = (soloIdx + Number(b.dataset.solo) + n) % n;
+  function soloStep(dir) {
+    const n = soloItems().length; if (n < 2) return;
+    soloIdx = (soloIdx + dir + n) % n;
     $$('.work', stage).forEach((el, i) => { el.classList.toggle('is-active', i === soloIdx); el.tabIndex = i === soloIdx ? 0 : -1; });
-  }));
+  }
+  const soloAuto = autoplay($('#solo'), () => soloStep(1), 5000);
+  $$('[data-solo]').forEach(b => b.addEventListener('click', () => { soloStep(Number(b.dataset.solo)); soloAuto(); }));
 
   /* ---------- Modal ---------- */
   const modal = $('#modal');
@@ -100,7 +123,8 @@
     $('#modalTitle').textContent = pick(w.title);
     $('#modalDesc').textContent = pick(w.description);
     $('#modalList').innerHTML = (pick(w.features) || []).map(f => `<li>${esc(f)}</li>`).join('');
-    const demo = w.demo_url ? `<a class="btn btn--outline" href="${esc(w.demo_url)}" target="_blank" rel="noopener">${esc(ui('liveDemo'))}</a>` : '';
+    const demoUrl = (w.demo_url || '').trim().replace(/^(?!https?:\/\/)(?=.)/i, 'https://');
+    const demo = /^https?:\/\/[^\s]+$/i.test(demoUrl) ? `<a class="btn btn--outline" href="${esc(demoUrl)}" target="_blank" rel="noopener">${esc(ui('liveDemo'))}</a>` : '';
     $('#modalActions').innerHTML = `<a class="btn" href="${esc(waLink(ui('wa.design', { title: pick(w.title) })))}" target="_blank" rel="noopener">${esc(ui('useDesign'))}</a>${demo}`;
   }
   function openModal(slug) {
@@ -130,6 +154,7 @@
     if (!sb) return [];
     const { data, error } = await sb.from('articles').select('slug,title,excerpt,cover_url,published_at')
       .eq('published', true).order('published_at', { ascending: false }).limit(3);
+    if (error) INV.logError?.('supabase', `articles: ${error.message}`);
     return error ? [] : data;
   }
   function renderPosts() {
@@ -174,6 +199,7 @@
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { input.setCustomValidity(ui('subInvalid')); input.reportValidity(); input.setCustomValidity(''); return; }
     if (!sb) { msg.textContent = ui('subErr'); return; }
     const { error } = await sb.from('subscribers').insert({ email, lang: INV.lang });
+    if (error && error.code !== '23505') INV.logError?.('supabase', `subscribers: ${error.message}`);
     msg.textContent = !error ? ui('subOk') : error.code === '23505' ? ui('subDup') : ui('subErr');
     if (!error) input.value = '';
   });

@@ -33,7 +33,10 @@
     if (!isAdmin) { await sb.auth.signOut(); return showLogin('Akun ini belum terdaftar di tabel admins.'); }
     $('#loginView').hidden = true; $('#appView').hidden = false;
     $('#who').textContent = session.user.email;
+    try { localStorage.setItem('inv_notrack', '1'); } catch { /* storage unavailable */ } // don't count the admin's own visits
     loadPortfolio(); loadArticles(); loadSubscribers(); loadSettings();
+    window.CMS_READY = { toast };
+    document.dispatchEvent(new CustomEvent('cms:ready', { detail: window.CMS_READY }));
   }
   $('#loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -198,7 +201,7 @@
       <div class="box"><b>Lainnya</b>
         <div class="grid2">
           <label>Slug (URL unik)<input name="slug" value="${esc(w.slug || '')}" placeholder="otomatis dari judul"></label>
-          <label>Link demo undangan<input name="demo_url" value="${esc(w.demo_url || '')}" placeholder="https://alyaraka.com"></label>
+          <label>Link demo undangan <small>(tombol “Lihat demo” di detail; kosongkan untuk sembunyikan)</small><input name="demo_url" type="text" inputmode="url" value="${esc(w.demo_url || '')}" placeholder="https://alyaraka.com"></label>
           <label>Urutan<input name="sort_order" type="number" value="${w.sort_order ?? (state.portfolio.length + 1)}"></label>
           <label style="align-self:end;display:flex;gap:8px;align-items:center"><input type="checkbox" name="published" ${w.published !== false ? 'checked' : ''}> Tayang di website</label>
         </div>
@@ -285,7 +288,7 @@
         categories: $$('input[name="cat"]:checked', form).map(c => c.value),
         theme: f.theme.value, kicker: f.kicker.value.trim(), names: f.names.value.trim(),
         event_date: f.event_date.value.trim(), place: f.place.value.trim(),
-        image_url: f.image_url.value.trim() || null, demo_url: f.demo_url.value.trim() || null,
+        image_url: f.image_url.value.trim() || null, demo_url: f.demo_url.value.trim().replace(/^(?!https?:\/\/)(?=.)/i, 'https://') || null,
         sort_order: Number(f.sort_order.value) || 0, published: f.published.checked,
       };
     } else {

@@ -136,6 +136,108 @@ create policy "subscribers admin read" on public.subscribers for select to authe
 drop policy if exists "subscribers admin delete" on public.subscribers;
 create policy "subscribers admin delete" on public.subscribers for delete to authenticated using (public.is_admin());
 
+-- ---------- Statistik pengunjung ----------
+-- Dicatat oleh assets/js/track.js (halaman publik saja). Pengunjung hanya boleh insert;
+-- membaca & menghapus khusus admin. IP tidak disimpan — hanya kota/negara hasil geolokasi.
+create table if not exists public.page_views (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  visitor_id text not null check (length(visitor_id) <= 64),
+  session_id text check (length(session_id) <= 64),
+  path text not null check (length(path) <= 300),
+  referrer text check (length(referrer) <= 200),
+  lang text check (length(lang) <= 8),
+  device text check (device in ('mobile', 'tablet', 'desktop')),
+  browser text check (length(browser) <= 40),
+  os text check (length(os) <= 40),
+  country text check (length(country) <= 80),
+  country_code text check (length(country_code) <= 2),
+  region text check (length(region) <= 80),
+  city text check (length(city) <= 80),
+  timezone text check (length(timezone) <= 60)
+);
+create index if not exists page_views_created_at_idx on public.page_views (created_at desc);
+alter table public.page_views enable row level security;
+
+drop policy if exists "page_views public insert" on public.page_views;
+create policy "page_views public insert" on public.page_views for insert to anon, authenticated with check (true);
+drop policy if exists "page_views admin read" on public.page_views;
+create policy "page_views admin read" on public.page_views for select to authenticated using (public.is_admin());
+drop policy if exists "page_views admin delete" on public.page_views;
+create policy "page_views admin delete" on public.page_views for delete to authenticated using (public.is_admin());
+
+-- ---------- Riwayat error website ----------
+create table if not exists public.error_logs (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  kind text not null check (kind in ('error', 'promise', 'resource', 'supabase')),
+  message text not null check (length(message) <= 1000),
+  path text check (length(path) <= 300),
+  source text check (length(source) <= 300),
+  line int,
+  col int,
+  stack text check (length(stack) <= 4000),
+  browser text check (length(browser) <= 40),
+  os text check (length(os) <= 40),
+  device text check (device in ('mobile', 'tablet', 'desktop')),
+  visitor_id text check (length(visitor_id) <= 64)
+);
+create index if not exists error_logs_created_at_idx on public.error_logs (created_at desc);
+alter table public.error_logs enable row level security;
+
+drop policy if exists "error_logs public insert" on public.error_logs;
+create policy "error_logs public insert" on public.error_logs for insert to anon, authenticated with check (true);
+drop policy if exists "error_logs admin read" on public.error_logs;
+create policy "error_logs admin read" on public.error_logs for select to authenticated using (public.is_admin());
+drop policy if exists "error_logs admin delete" on public.error_logs;
+create policy "error_logs admin delete" on public.error_logs for delete to authenticated using (public.is_admin());
+
+-- Ringkasan untuk dashboard CMS (dihitung di database, waktu WIB).
+create or replace function public.visitor_stats(p_days int default 30)
+returns jsonb
+language plpgsql stable security definer
+set search_path = public
+as $$
+declare
+  tz constant text := 'Asia/Jakarta';
+  n int := greatest(1, least(coalesce(p_days, 30), 365));
+  first_day date := (now() at time zone tz)::date - (n - 1);
+  since timestamptz := first_day::timestamp at time zone tz;
+  today timestamptz := (now() at time zone tz)::date::timestamp at time zone tz;
+  result jsonb;
+begin
+  if not public.is_admin() then raise exception 'not authorized'; end if;
+
+  with v as (select * from public.page_views where created_at >= since)
+  select jsonb_build_object(
+    'views',          (select count(*) from v),
+    'visitors',       (select count(distinct visitor_id) from v),
+    'sessions',       (select count(distinct session_id) from v),
+    'today_views',    (select count(*) from v where created_at >= today),
+    'today_visitors', (select count(distinct visitor_id) from v where created_at >= today),
+    'daily', (
+      select coalesce(jsonb_agg(jsonb_build_object('day', d.day, 'views', d.views, 'visitors', d.visitors) order by d.day), '[]'::jsonb)
+      from (
+        select g::date as day, count(v.id) as views, count(distinct v.visitor_id) as visitors
+        from generate_series(first_day, (now() at time zone tz)::date, interval '1 day') g
+        left join v on (v.created_at at time zone tz)::date = g::date
+        group by g
+      ) d
+    ),
+    'pages',     (select coalesce(jsonb_agg(x), '[]'::jsonb) from (select path as label, count(*) as views, count(distinct visitor_id) as visitors from v group by path order by 2 desc limit 10) x),
+    'referrers', (select coalesce(jsonb_agg(x), '[]'::jsonb) from (select referrer as label, count(*) as views, count(distinct visitor_id) as visitors from v where referrer is not null group by referrer order by 2 desc limit 10) x),
+    'countries', (select coalesce(jsonb_agg(x), '[]'::jsonb) from (select coalesce(country, 'Tidak diketahui') as label, country_code as code, count(*) as views, count(distinct visitor_id) as visitors from v group by country, country_code order by 4 desc limit 10) x),
+    'cities',    (select coalesce(jsonb_agg(x), '[]'::jsonb) from (select concat_ws(', ', city, nullif(region, city), country) as label, count(*) as views, count(distinct visitor_id) as visitors from v where city is not null group by city, region, country order by 3 desc limit 15) x),
+    'devices',   (select coalesce(jsonb_agg(x), '[]'::jsonb) from (select coalesce(device, 'lainnya') as label, count(*) as views, count(distinct visitor_id) as visitors from v group by device order by 3 desc) x),
+    'browsers',  (select coalesce(jsonb_agg(x), '[]'::jsonb) from (select coalesce(browser, 'Lainnya') as label, count(*) as views, count(distinct visitor_id) as visitors from v group by browser order by 3 desc limit 8) x),
+    'langs',     (select coalesce(jsonb_agg(x), '[]'::jsonb) from (select coalesce(upper(lang), '-') as label, count(*) as views, count(distinct visitor_id) as visitors from v group by lang order by 3 desc) x)
+  ) into result;
+  return result;
+end;
+$$;
+revoke all on function public.visitor_stats(int) from public, anon;
+grant execute on function public.visitor_stats(int) to authenticated;
+
 -- =====================================================================
 -- SEED DATA
 -- =====================================================================

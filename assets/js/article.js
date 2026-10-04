@@ -8,10 +8,12 @@
     if (!sb) return slug ? null : [];
     if (slug) {
       const { data: row, error } = await sb.from('articles').select('*').eq('slug', slug).eq('published', true).maybeSingle();
+      if (error) INV.logError?.('supabase', `article: ${error.message}`);
       return error ? null : row;
     }
     const { data: rows, error } = await sb.from('articles').select('slug,title,excerpt,cover_url,published_at')
       .eq('published', true).order('published_at', { ascending: false });
+    if (error) INV.logError?.('supabase', `articles: ${error.message}`);
     return error ? [] : rows;
   }
 

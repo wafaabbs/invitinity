@@ -4,8 +4,8 @@ Website premium invitation studio — **invitinity.my.id**
 Static site (HTML/CSS/JS, tanpa build) + **Supabase** sebagai database & CMS.
 
 - 3 bahasa: Indonesia (default), English, Bahasa Melayu
-- CMS di `/admin`: portofolio, artikel, pelanggan newsletter, dan tampilan (font, warna, kontak, teks hero, section)
-- Desain: Warm Boutique (cokelat & krem), logo berupa wordmark
+- CMS di `/admin`: portofolio, artikel, pelanggan newsletter, statistik pengunjung (termasuk kota/negara), riwayat error, dan tampilan (font, warna, kontak, teks hero, section)
+- Desain: plum `#701c45` & putih, font sistem, logo berupa wordmark
 - Gambar disimpan di Supabase Storage (bucket `media`)
 
 ## Struktur
@@ -21,6 +21,7 @@ assets/js/defaults.js Pilihan font, setting default, contoh portofolio
 assets/js/core.js     Bahasa, setting CMS, helper
 assets/js/site.js     Logika halaman utama
 assets/js/article.js  Logika halaman artikel
+assets/js/track.js    Statistik pengunjung & pencatat error (halaman publik)
 supabase/schema.sql   Tabel, RLS, storage, data awal
 ```
 
@@ -32,7 +33,7 @@ supabase/schema.sql   Tabel, RLS, storage, data awal
 4. **Authentication → Sign In / Providers** → matikan *Allow new users to sign up* agar orang lain tidak bisa mendaftar.
 5. Buka `/admin`, login, dan mulai kelola konten.
 
-> Sudah pernah menjalankan schema.sql? Jalankan ulang file terbaru — aman (idempotent), menambah tabel `subscribers` dan memperbarui tema ke Warm Boutique.
+> Sudah pernah menjalankan schema.sql? Jalankan ulang file terbaru — aman (idempotent), menambah tabel yang belum ada (`subscribers`, `page_views`, `error_logs`) dan fungsi `visitor_stats`.
 
 > Menambah admin lain: `insert into public.admins (email) values ('email@domain.com');` lalu buat user-nya di Authentication.
 

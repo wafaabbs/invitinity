@@ -111,6 +111,7 @@ window.INV = (() => {
     if (cached) { try { settings = merge(JSON.parse(cached)); applySettings(); } catch { /* ignore bad cache */ } }
     if (!sb) return settings;
     const { data, error } = await sb.from('settings').select('value').eq('key', 'site').maybeSingle();
+    if (error) window.INV?.logError?.('supabase', `settings: ${error.message}`);
     if (!error && data?.value) {
       settings = merge(data.value);
       store.set('inv_settings', JSON.stringify(data.value));
