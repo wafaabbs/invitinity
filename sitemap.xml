@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sitemap Invitinity. Artikel baru dari CMS perlu ditambahkan manual di bawah (article.html?slug=...). -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://invitinity.my.id/</loc>
+    <xhtml:link rel="alternate" hreflang="id" href="https://invitinity.my.id/?lang=id"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://invitinity.my.id/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="ms" href="https://invitinity.my.id/?lang=ms"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://invitinity.my.id/"/>
+    <lastmod>2026-10-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://invitinity.my.id/article.html</loc>
+    <lastmod>2026-10-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://invitinity.my.id/article.html?slug=tips-memilih-undangan-digital</loc>
+    <lastmod>2026-09-20</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://invitinity.my.id/article.html?slug=digital-atau-cetak</loc>
+    <lastmod>2026-09-05</lastmod>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://invitinity.my.id/demo/maharani/</loc>
+    <lastmod>2026-10-04</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://invitinity.my.id/demo/raudhah/</loc>
+    <lastmod>2026-10-04</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://invitinity.my.id/demo/langit-biru/</loc>
+    <lastmod>2026-10-04</lastmod>
+    <priority>0.5</priority>
+  </url>
+</urlset>
