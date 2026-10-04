@@ -2,6 +2,7 @@
    - One page_views row per page load: page, referrer host, device/browser/OS, language,
      and city/country from an IP geolocation lookup (the IP itself is never stored).
    - Uncaught errors, failed resources and Supabase errors go to error_logs.
+   Bots/headless browsers and datacenter networks are skipped; a view is only recorded after real interaction.
    Opt-out: the CMS sets localStorage inv_notrack=1 for admins so their visits don't count. */
 (() => {
   const sb = window.INV?.sb;
@@ -14,7 +15,10 @@
     get(k) { try { return sessionStorage.getItem(k); } catch { return null; } },
     set(k, v) { try { sessionStorage.setItem(k, v); } catch { /* storage unavailable */ } },
   };
-  const disabled = !sb || local || navigator.webdriver || ls.get('inv_notrack') === '1';
+  // Crawlers, link previews, SEO/uptime tools and headless browsers (they run JS, so they'd count as visits).
+  const BOT = /bot|crawl|spider|slurp|headless|lighthouse|pagespeed|gtmetrix|pingdom|uptime|preview|facebookexternalhit|whatsapp|telegram|discord|curl|wget|python|phantom|selenium|puppeteer|playwright|google-inspectiontool|chrome-lighthouse/i;
+  const isBot = BOT.test(navigator.userAgent) || navigator.webdriver || !(navigator.languages && navigator.languages.length);
+  const disabled = !sb || local || isBot || ls.get('inv_notrack') === '1';
 
   const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
   const visitorId = ls.get('inv_vid') || uid(); ls.set('inv_vid', visitorId);
@@ -33,7 +37,7 @@
 
   /* ---------- Page + referrer ---------- */
   const params = new URLSearchParams(location.search);
-  const path = location.pathname.replace(/\/index\.html$/, '/') + (params.get('slug') ? `?slug=${params.get('slug')}` : '');
+  const path = location.pathname.replace(/^\/invitinity(?=\/)/, '').replace(/\/index\.html$/, '/') + (params.get('slug') ? `?slug=${params.get('slug')}` : '');
   let referrer = params.get('utm_source') || null;
   if (!referrer && document.referrer) {
     try { const h = new URL(document.referrer).hostname; if (h && h !== location.hostname) referrer = h.replace(/^www\./, ''); } catch { /* bad referrer */ }
@@ -47,20 +51,25 @@
     catch { return null; } finally { clearTimeout(t); }
   }
   async function geo() {
-    try { const c = JSON.parse(ls.get('inv_geo') || 'null'); if (c && Date.now() - c.t < GEO_TTL) return c.g; } catch { /* corrupt cache */ }
+    try { const c = JSON.parse(ls.get('inv_geo2') || 'null'); if (c && Date.now() - c.t < GEO_TTL) return c.g; } catch { /* corrupt cache */ }
     let g = null;
     const a = await fetchJson('https://get.geojs.io/v1/ip/geo.json');
-    if (a && (a.country || a.city)) g = { city: a.city, region: a.region, country: a.country, country_code: a.country_code };
+    if (a && (a.country || a.city)) g = { city: a.city, region: a.region, country: a.country, country_code: a.country_code, org: a.organization_name || a.organization };
     if (!g) {
       const b = await fetchJson('https://ipwho.is/');
-      if (b && b.success !== false) g = { city: b.city, region: b.region, country: b.country, country_code: b.country_code };
+      if (b && b.success !== false) g = { city: b.city, region: b.region, country: b.country, country_code: b.country_code, org: b.connection?.org || b.connection?.isp };
     }
-    if (g) ls.set('inv_geo', JSON.stringify({ t: Date.now(), g }));
+    if (g) ls.set('inv_geo2', JSON.stringify({ t: Date.now(), g }));
     return g || {};
   }
 
+  // Cloud/hosting networks: visits from here are servers (crawlers, scanners, headless bots), not people.
+  // Cloudflare & Akamai are left out on purpose: iCloud Private Relay (real iPhone users) exits through them.
+  const DATACENTER = /amazon|aws|google|microsoft|azure|digitalocean|linode|ovh|hetzner|vultr|choopa|constant company|oracle|alibaba|tencent|huawei cloud|contabo|scaleway|online s\.a\.s|leaseweb|hostinger|ionos|godaddy|rackspace|softlayer|ibm cloud|datacamp|zenlayer|cogent|hurricane electric|psychz|quadranet|colocrossing|m247 ltd hosting/i;
+
   async function recordView() {
     const g = await geo();
+    if (g.org && DATACENTER.test(g.org)) return;
     await sb.from('page_views').insert({
       visitor_id: visitorId, session_id: sessionId, path: cut(path, 300), referrer: cut(referrer, 200),
       lang: cut(window.INV?.lang || document.documentElement.lang, 8), device, browser, os,
@@ -85,10 +94,20 @@
   }
   if (window.INV) window.INV.logError = logError;
 
+  let leaving = false;
+  addEventListener('pagehide', () => { leaving = true; });
   addEventListener('error', (e) => {
     const el = e.target;
     if (el && el !== window && (el.src || el.href)) {
-      return logError('resource', `Gagal memuat ${el.tagName.toLowerCase()}`, { source: el.src || el.href });
+      if (leaving || !el.isConnected) return; // load aborted by navigation or a re-render, not a broken file
+      const src = el.src || el.href;
+      // Images get one automatic retry (helps visitors on flaky networks); only a second failure is logged.
+      if (el.tagName === 'IMG' && !el.dataset.retried) {
+        el.dataset.retried = '1';
+        setTimeout(() => { if (el.isConnected) el.src = src + (src.includes('?') ? '&' : '?') + 'retry=1'; }, 1500);
+        return;
+      }
+      return logError('resource', `Gagal memuat ${el.tagName.toLowerCase()}`, { source: src.replace(/[?&]retry=1$/, '') });
     }
     if (/^Script error\.?$/.test(e.message) || /extension:\/\//.test(e.filename || '')) return; // cross-origin / browser extensions
     logError('error', e.message, { source: e.filename, line: e.lineno, col: e.colno, stack: e.error?.stack });
@@ -98,5 +117,11 @@
     logError('promise', r?.message || String(r), { stack: r?.stack });
   });
 
-  if (!disabled) recordView().catch(() => {});
+  // Count a visit only after real interaction (scroll, touch, mouse, key): bots that render
+  // the page rarely do this, so datacenter crawlers stay out of the stats.
+  if (!disabled) {
+    const EVENTS = ['scroll', 'pointermove', 'pointerdown', 'touchstart', 'keydown'];
+    const once = () => { EVENTS.forEach(ev => removeEventListener(ev, once, true)); recordView().catch(() => {}); };
+    EVENTS.forEach(ev => addEventListener(ev, once, { capture: true, passive: true }));
+  }
 })();
