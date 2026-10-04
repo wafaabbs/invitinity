@@ -37,6 +37,7 @@ window.FONT_PRESETS = {
 
 window.DEFAULT_SETTINGS = {
   font: 'system',
+  coming_soon: false,
   accent: '#701c45',
   wa_number: '',
   instagram: 'invitinity',

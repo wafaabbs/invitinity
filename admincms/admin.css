@@ -190,3 +190,9 @@ body.cms { background: #fafafa; font-family: var(--font-system); --font-sans: va
   .err summary { grid-template-columns: 1fr; }
   .err__meta { grid-column: 1; }
 }
+
+/* Site mode toggle (topbar) */
+.site-mode { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 999px; font-size: 13px; font-weight: 600; background: #E7F5EC; color: #1E7B45; }
+.site-mode__dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.site-mode.is-cs { background: var(--accent-soft); color: var(--accent); }
+.site-mode:hover { filter: brightness(.96); }

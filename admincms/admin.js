@@ -369,6 +369,7 @@
     const f = sForm.elements;
     (sForm.querySelector(`input[name="font"][value="${current.font}"]`) || sForm.querySelector('input[name="font"]')).checked = true;
     f.accent.value = current.accent || '#701c45';
+    renderSiteMode();
     f.wa_number.value = current.wa_number || '';
     f.instagram.value = current.instagram || '';
     Object.entries(current.sections).forEach(([k, on]) => { if (f[`sec_${k}`]) f[`sec_${k}`].checked = on; });
@@ -385,11 +386,31 @@
       hero_title: readI18n(sForm, 'hero_title'),
       hero_subtitle: readI18n(sForm, 'hero_subtitle'),
       sections: Object.fromEntries(Object.keys(window.DEFAULT_SETTINGS.sections).map(k => [k, !!f[`sec_${k}`]?.checked])),
+      coming_soon: !!current.coming_soon,
     };
     const { error } = await sb.from('settings').upsert({ key: 'site', value });
     if (error) return toast(error.message, true);
     current = value;
     toast('Tampilan tersimpan ✓ — refresh website untuk melihat perubahan');
+  });
+
+  /* ================= SITE MODE (Public / Coming Soon) ================= */
+  function renderSiteMode() {
+    const on = !!current.coming_soon, b = $('#siteMode');
+    b.classList.toggle('is-cs', on); b.setAttribute('aria-pressed', String(on));
+    $('#siteModeText').textContent = on ? 'Coming Soon' : 'Website publik';
+  }
+  $('#siteMode').addEventListener('click', async () => {
+    const turnOn = !current.coming_soon;
+    const msg = turnOn
+      ? 'Aktifkan mode Coming Soon?\n\nPengunjung hanya akan melihat halaman "Invitinity · Invitation Studio · Coming Soon". Kamu tetap bisa melihat website asli selama login di browser ini.'
+      : 'Matikan Coming Soon dan tampilkan website ke publik?';
+    if (!confirm(msg)) return;
+    const value = { ...current, coming_soon: turnOn };
+    const { error } = await sb.from('settings').upsert({ key: 'site', value });
+    if (error) return toast(error.message, true);
+    current = value; renderSiteMode();
+    toast(turnOn ? 'Coming Soon aktif ✓ — pengunjung melihat halaman Coming Soon' : 'Website publik kembali ✓');
   });
 
   boot();

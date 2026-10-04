@@ -100,6 +100,7 @@ window.INV = (() => {
     });
     applySettingsText();
     refreshWaLinks();
+    applyComingSoon();
   }
   function applySettingsText() {
     const t = settings.hero_title?.[lang], d = settings.hero_subtitle?.[lang];
@@ -109,16 +110,63 @@ window.INV = (() => {
   async function loadSettings() {
     const cached = store.get('inv_settings');
     if (cached) { try { settings = merge(JSON.parse(cached)); applySettings(); } catch { /* ignore bad cache */ } }
-    if (!sb) return settings;
+    if (!sb) { document.documentElement.classList.remove('cs-wait'); return settings; }
     const { data, error } = await sb.from('settings').select('value').eq('key', 'site').maybeSingle();
     if (error) window.INV?.logError?.('supabase', `settings: ${error.message}`);
     if (!error && data?.value) {
       settings = merge(data.value);
       store.set('inv_settings', JSON.stringify(data.value));
       applySettings();
+    } else {
+      document.documentElement.classList.remove('cs-wait');
     }
     return settings;
   }
+
+  /* ---------- Coming Soon mode (CMS → topbar toggle) ----------
+     Visitors get a full-screen Coming Soon page; a signed-in admin still sees the site, with a banner.
+     The real HTML still ships to the browser, so this hides the site — it doesn't make it secret. */
+  let adminSession = null;
+  const isAdmin = () => (adminSession ??= sb ? sb.auth.getSession().then(r => !!r.data.session).catch(() => false) : Promise.resolve(false));
+  async function applyComingSoon() {
+    const root = document.documentElement;
+    if (!settings.coming_soon) {
+      root.classList.remove('cs-on', 'cs-wait'); $('#csPage')?.remove(); $('#csBanner')?.remove();
+      return;
+    }
+    if (await isAdmin()) {
+      root.classList.remove('cs-on', 'cs-wait'); $('#csPage')?.remove();
+      if (!$('#csBanner')) document.body.insertAdjacentHTML('afterbegin', `<div class="cs-banner" id="csBanner" role="status"></div>`);
+      $('#csBanner').textContent = ui('cs.admin');
+      return;
+    }
+    renderComingSoon();
+    root.classList.add('cs-on'); root.classList.remove('cs-wait');
+  }
+  function renderComingSoon() {
+    const ig = (settings.instagram || 'invitinity').replace(/^@/, '');
+    const wa = (settings.wa_number || '').replace(/\D/g, '');
+    let page = $('#csPage');
+    if (!page) { page = document.createElement('main'); page.className = 'cs'; page.id = 'csPage'; document.body.prepend(page); }
+    page.innerHTML = `
+      <div class="cs__inner">
+        <div class="wordmark wordmark--light"><span class="wordmark__name">Invitinity</span><span class="wordmark__tag">Invitation Studio</span></div>
+        <span class="cs__rule" aria-hidden="true"></span>
+        <h1 class="cs__title">Coming Soon</h1>
+        <p class="cs__text">${esc(ui('cs.text'))}</p>
+        <div class="cs__links">
+          <a href="https://www.instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener">@${esc(ig)}</a>
+          ${wa ? `<a href="${esc(waLink(ui('wa.hello')))}" target="_blank" rel="noopener">${esc(ui('cs.contact'))}</a>` : ''}
+        </div>
+        <div class="cs__lang">${LANGS.map(l => `<button type="button" data-cs-lang="${l}" aria-pressed="${l === lang}">${l.toUpperCase()}</button>`).join('')}</div>
+      </div>`;
+    page.querySelectorAll('[data-cs-lang]').forEach(b => b.addEventListener('click', () => setLang(b.dataset.csLang)));
+    document.title = 'Invitinity · Invitation Studio — Coming Soon';
+  }
+  onLang(() => {
+    if ($('#csPage')) renderComingSoon();
+    if ($('#csBanner')) $('#csBanner').textContent = ui('cs.admin');
+  });
 
   /* ---------- WhatsApp ---------- */
   const waLink = (msg) => `https://wa.me/${(settings.wa_number || '').replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
@@ -239,6 +287,7 @@ window.INV = (() => {
     setLang(lang, { persist: false });
     reveal();
     loadSettings();
+    setTimeout(() => document.documentElement.classList.remove('cs-wait'), 2500); // never stay blank if Supabase is slow
   }
 
   return { sb, cfg, $, $$, esc, pick, ui, fmtDate, markdown, design, media, postCard, renderMocks, waLink, reveal, onLang, init,

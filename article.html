@@ -12,6 +12,8 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap">
   <link id="fontLink" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/style.css">
+  <!-- Coming Soon guard: hide the page until we know whether Coming Soon mode is on (see core.js). -->
+  <script>(function(){var c='cs-wait';try{var s=JSON.parse(localStorage.getItem('inv_settings')||'null');if(s)c=s.coming_soon?'cs-on':'';}catch(e){}if(c)document.documentElement.classList.add(c);})();</script>
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
