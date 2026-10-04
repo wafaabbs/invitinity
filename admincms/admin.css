@@ -196,3 +196,4 @@ body.cms { background: #fafafa; font-family: var(--font-system); --font-sans: va
 .site-mode__dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 .site-mode.is-cs { background: var(--accent-soft); color: var(--accent); }
 .site-mode:hover { filter: brightness(.96); }
+.cms label.inline-check { display: flex; align-items: center; gap: 8px; font-weight: 400; }

@@ -114,6 +114,10 @@
   const soloAuto = autoplay($('#solo'), () => soloStep(1), 5000);
   $$('[data-solo]').forEach(b => b.addEventListener('click', () => { soloStep(Number(b.dataset.solo)); soloAuto(); }));
 
+  /* ---------- Portfolio image protection (deterrent; the CMS also watermarks uploads) ---------- */
+  document.addEventListener('contextmenu', (e) => { if (e.target.closest('.work__media, .modal__media, .ig-tile')) e.preventDefault(); });
+  document.addEventListener('dragstart', (e) => { if (e.target.closest('.work__media, .modal__media, .ig-tile')) e.preventDefault(); });
+
   /* ---------- Modal ---------- */
   const modal = $('#modal');
   let lastFocus = null, openSlug = null;

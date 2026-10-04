@@ -6,7 +6,9 @@
   const LANGS = [['id', 'ID'], ['en', 'EN'], ['ms', 'MS']];
   const CAT_LABEL = { wedding: 'Wedding', birthday: 'Ulang tahun', corporate: 'Korporat', minimalist: 'Minimalis', luxury: 'Luxury' };
   const BUCKET = INV.cfg.mediaBucket || 'media';
-  const MAX_UPLOAD = 5 * 1024 * 1024;
+  const MAX_UPLOAD = 5 * 1024 * 1024;     // after resizing/compressing
+  const MAX_ORIGINAL = 25 * 1024 * 1024;  // file picked by the admin
+  const MAX_SIDE = 1600;                  // px, longest side of uploaded images
 
   const idText = (v) => (v && (v.id || v.en || v.ms)) || '';
   const slugify = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
@@ -93,10 +95,54 @@
   }));
 
   /* ================= UPLOAD ================= */
-  async function upload(file, folder) {
+  // Burn a watermark into the image itself, so a downloaded/copied file still carries the brand.
+  function drawWatermark(ctx, w, h) {
+    const base = Math.max(w, h);
+    // Faint diagonal "invitinity.my.id" tiles across the whole image (readable on light and dark designs).
+    const size = Math.round(base * 0.026);
+    ctx.save();
+    ctx.translate(w / 2, h / 2); ctx.rotate(-Math.PI / 6);
+    ctx.font = `600 ${size}px ui-sans-serif, system-ui, sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const stepX = size * 14, stepY = size * 6, reach = base * 1.2;
+    for (let y = -reach, row = 0; y <= reach; y += stepY, row++) {
+      for (let x = -reach + (row % 2) * stepX / 2; x <= reach; x += stepX) {
+        ctx.fillStyle = 'rgba(255,255,255,.22)'; ctx.fillText('invitinity.my.id', x, y);
+        ctx.fillStyle = 'rgba(0,0,0,.10)'; ctx.fillText('invitinity.my.id', x + 1, y + 1);
+      }
+    }
+    ctx.restore();
+    // Signature in the bottom-right corner.
+    const sig = Math.round(base * 0.045), pad = Math.round(base * 0.03);
+    ctx.save();
+    ctx.font = `italic 500 ${sig}px "Cormorant Garamond", Georgia, serif`;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.shadowColor = 'rgba(0,0,0,.45)'; ctx.shadowBlur = sig * 0.25;
+    ctx.fillStyle = 'rgba(255,255,255,.9)';
+    ctx.fillText('Invitinity', w - pad, h - pad);
+    ctx.restore();
+  }
+  // Resize to MAX_SIDE, optionally watermark, and re-encode as JPEG (keeps uploads small for mobile visitors).
+  async function processImage(file, watermark) {
+    if (/image\/(gif|svg)/.test(file.type)) return file;
+    let img;
+    try { img = await createImageBitmap(file); } catch { return file; }
+    const scale = Math.min(1, MAX_SIDE / Math.max(img.width, img.height));
+    const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
+    const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h); // JPEG has no transparency
+    ctx.drawImage(img, 0, 0, w, h);
+    if (watermark) { await document.fonts?.load(`italic 500 40px "Cormorant Garamond"`).catch(() => {}); drawWatermark(ctx, w, h); }
+    const blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', 0.85));
+    return blob ? new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }) : file;
+  }
+  async function upload(file, folder, { watermark = false } = {}) {
     if (!file) return null;
     if (!file.type.startsWith('image/')) throw new Error('File harus berupa gambar.');
-    if (file.size > MAX_UPLOAD) throw new Error('Ukuran gambar maksimal 5 MB.');
+    if (file.size > MAX_ORIGINAL) throw new Error('Ukuran gambar maksimal 25 MB.');
+    file = await processImage(file, watermark);
+    if (file.size > MAX_UPLOAD) throw new Error('Gambar masih lebih dari 5 MB setelah dikompres. Coba gambar lain.');
     const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
     const path = `${folder}/${Date.now()}-${slugify(file.name.replace(/\.[^.]+$/, '')) || 'image'}.${ext}`;
     const { error } = await sb.storage.from(BUCKET).upload(path, file, { cacheControl: '31536000', upsert: false });
@@ -107,9 +153,10 @@
     const input = $('input[type="file"]', form);
     input.addEventListener('change', async () => {
       const file = input.files[0]; if (!file) return;
-      toast('Mengunggah gambar…');
+      const watermark = !!form.elements.watermark?.checked;
+      toast(watermark ? 'Memasang watermark & mengunggah…' : 'Mengunggah gambar…');
       try {
-        form.elements[urlName].value = await upload(file, folder);
+        form.elements[urlName].value = await upload(file, folder, { watermark });
         toast('Gambar terunggah ✓'); onDone();
       } catch (err) { toast(err.message, true); }
       input.value = '';
@@ -185,7 +232,8 @@
         <div class="checks">${window.PORTFOLIO_CATEGORIES.map(c => `<label><input type="checkbox" name="cat" value="${c}" ${cats.includes(c) ? 'checked' : ''}> ${CAT_LABEL[c]}</label>`).join('')}</div>
       </div>
       <div class="box"><b>Gambar</b>
-        <p class="hint">Unggah foto/mockup desain (rasio 4:5 ideal). Jika kosong, kartu otomatis dibuat dari data “Kartu otomatis”.</p>
+        <p class="hint">Unggah foto/mockup desain (rasio 4:5 ideal). Jika kosong, kartu otomatis dibuat dari data “Kartu otomatis”. Gambar otomatis diperkecil (maks ${MAX_SIDE}px) &amp; dikompres.</p>
+        <label class="inline-check"><input type="checkbox" name="watermark" checked> Pasang watermark “invitinity.my.id” di gambar <small>(disarankan, supaya karya tidak mudah dicuri)</small></label>
         <div class="upload"><input type="file" accept="image/*"></div>
         <label>atau URL gambar<input name="image_url" value="${esc(w.image_url || '')}" placeholder="https://…"></label>
       </div>
@@ -234,6 +282,7 @@
       </div>
       <div class="box"><b>Cover</b>
         <div class="cover-preview" id="cv"></div>
+        <label class="inline-check"><input type="checkbox" name="watermark"> Pasang watermark “invitinity.my.id” di gambar</label>
         <div class="upload"><input type="file" accept="image/*"></div>
         <label>atau URL gambar<input name="cover_url" value="${esc(a.cover_url || '')}" placeholder="https://…"></label>
       </div>
