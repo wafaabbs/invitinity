@@ -3,6 +3,11 @@
    supabase/schema.sql has been run). The same items are seeded into the DB. */
 
 window.FONT_PRESETS = {
+  system: {
+    label: 'System — ui-sans-serif / system-ui',
+    serif: 'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"', sans: 'ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"',
+    href: '',
+  },
   warm: {
     label: 'Warm Boutique — Cormorant Garamond + Jost',
     serif: '"Cormorant Garamond", Georgia, serif', sans: '"Jost", system-ui, sans-serif',
@@ -31,8 +36,8 @@ window.FONT_PRESETS = {
 };
 
 window.DEFAULT_SETTINGS = {
-  font: 'warm',
-  accent: '#6B4A35',
+  font: 'system',
+  accent: '#701c45',
   wa_number: '',
   instagram: 'invitinity',
   hero_title: { id: '', en: '', ms: '' },

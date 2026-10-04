@@ -79,12 +79,13 @@ window.INV = (() => {
   const merge = (s) => ({ ...window.DEFAULT_SETTINGS, ...s, sections: { ...window.DEFAULT_SETTINGS.sections, ...(s?.sections || {}) } });
 
   function applyFont(key) {
-    const p = window.FONT_PRESETS[key] || window.FONT_PRESETS.warm;
+    const p = window.FONT_PRESETS[key] || window.FONT_PRESETS.system;
     const root = document.documentElement.style;
     root.setProperty('--font-serif', p.serif);
     root.setProperty('--font-sans', p.sans);
     const link = $('#fontLink');
-    if (link && link.href !== p.href) link.href = p.href;
+    if (link && !p.href) link.removeAttribute('href');
+    else if (link && link.href !== p.href) link.href = p.href;
   }
   function applySettings() {
     applyFont(settings.font);

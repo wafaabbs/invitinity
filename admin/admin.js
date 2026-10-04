@@ -365,7 +365,7 @@
     current = { ...window.DEFAULT_SETTINGS, ...v, sections: { ...window.DEFAULT_SETTINGS.sections, ...(v.sections || {}) } };
     const f = sForm.elements;
     (sForm.querySelector(`input[name="font"][value="${current.font}"]`) || sForm.querySelector('input[name="font"]')).checked = true;
-    f.accent.value = current.accent || '#6B4A35';
+    f.accent.value = current.accent || '#701c45';
     f.wa_number.value = current.wa_number || '';
     f.instagram.value = current.instagram || '';
     Object.entries(current.sections).forEach(([k, on]) => { if (f[`sec_${k}`]) f[`sec_${k}`].checked = on; });
@@ -375,7 +375,7 @@
   $('#saveSettings').addEventListener('click', async () => {
     const f = sForm.elements;
     const value = {
-      font: f.font.value || 'warm',
+      font: f.font.value || 'system',
       accent: f.accent.value,
       wa_number: f.wa_number.value.replace(/\D/g, ''),
       instagram: f.instagram.value.trim().replace(/^@/, ''),

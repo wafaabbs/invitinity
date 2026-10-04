@@ -139,7 +139,7 @@
   }
 
   /* ---------- Instagram tiles ---------- */
-  const IG_BG = ['#E9D5BC', '#6E4B36', '#F3E3CF', '#C9A783', '#EBC9B8', '#3B2A20'];
+  const IG_BG = ['#f8eef3', '#701c45', '#ffffff', '#e3bfd0', '#f1dde7', '#4a1230'];
   function renderIg() {
     const pool = works.length ? works : window.DEFAULT_PORTFOLIO;
     $('#igGrid').innerHTML = IG_BG.map((bg, i) => {

@@ -141,13 +141,19 @@ create policy "subscribers admin delete" on public.subscribers for delete to aut
 -- =====================================================================
 
 -- Settings
-insert into public.settings (key, value) values ('site', '{"font":"warm","accent":"#6B4A35","wa_number":"","instagram":"invitinity","hero_title":{"id":"","en":"","ms":""},"hero_subtitle":{"id":"","en":"","ms":""},"sections":{"testimonials":true,"packages":true,"articles":true,"instagram":true,"faq":true}}'::jsonb) on conflict (key) do nothing;
+insert into public.settings (key, value) values ('site', '{"font":"system","accent":"#701c45","wa_number":"","instagram":"invitinity","hero_title":{"id":"","en":"","ms":""},"hero_subtitle":{"id":"","en":"","ms":""},"sections":{"testimonials":true,"packages":true,"articles":true,"instagram":true,"faq":true}}'::jsonb) on conflict (key) do nothing;
 
 -- Upgrade: pindahkan setting lama (Playfair + gold) ke tema Warm Boutique (Cormorant + Jost, cokelat).
 -- Hanya berlaku jika setting belum pernah diubah dari bawaan lama.
 update public.settings
 set value = value || '{"font":"warm","accent":"#6B4A35"}'::jsonb
 where key = 'site' and value->>'font' = 'modern' and value->>'accent' = '#C9A45C';
+
+-- Upgrade: Warm Boutique (cokelat) → plum + putih, font sistem (logo tetap Cormorant).
+-- Hanya berlaku jika setting belum pernah diubah dari bawaan Warm Boutique.
+update public.settings
+set value = value || '{"font":"system","accent":"#701c45"}'::jsonb
+where key = 'site' and value->>'font' = 'warm' and value->>'accent' = '#6B4A35';
 
 -- Portfolio
 insert into public.portfolio (slug,title,description,features,categories,theme,kicker,names,event_date,place,sort_order,published) values ('ethereal-bloom','{"id":"Ethereal Bloom","en":"Ethereal Bloom","ms":"Ethereal Bloom"}'::jsonb,'{"id":"Nuansa romantis dengan bingkai lengkung, palet blush dan aksen champagne gold.","en":"A romantic feel with an arch frame, blush palette and champagne gold accents.","ms":"Suasana romantik dengan bingkai melengkung, palet merah jambu lembut dan aksen emas champagne."}'::jsonb,'{"id":["Animasi pembuka amplop","Love story timeline","RSVP & ucapan tamu"],"en":["Envelope opening animation","Love story timeline","RSVP & guest wishes"],"ms":["Animasi pembukaan sampul","Garis masa kisah cinta","RSVP & ucapan tetamu"]}'::jsonb,array['wedding','luxury']::text[],'bloom','The Wedding of','Alya & Raka','12 · 12 · 2026','Bandung',1,true) on conflict (slug) do nothing;
