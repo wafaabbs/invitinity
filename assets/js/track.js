@@ -6,6 +6,7 @@
    real (trusted) interaction from a normal ISP network.
    Opt-out: the CMS sets localStorage inv_notrack=1 for admins so their visits don't count. */
 (() => {
+  if (new URLSearchParams(location.search).get('inv_preview') === '1') return;
   const sb = window.INV?.sb;
   const local = /^(localhost|127\.|0\.0\.0\.0|\[::1\])/.test(location.hostname) || location.protocol === 'file:';
   const ls = {

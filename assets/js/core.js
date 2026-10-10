@@ -219,6 +219,138 @@ window.INV = (() => {
   }
   const media = (w) => w.image_url ? `<img src="${esc(w.image_url)}" alt="${esc(pick(w.title))}" loading="lazy">` : design(w);
 
+  function productUrl(raw) {
+    let value = String(raw || '').trim();
+    if (!value) return null;
+    if (/^\/(?!\/)/.test(value)) value = `${location.origin}${value}`;
+    else if (!/^https?:\/\//i.test(value)) value = `https://${value}`;
+    try {
+      const url = new URL(value, location.href);
+      if (!/^https?:$/.test(url.protocol) || url.origin !== location.origin) return null;
+      return url.href;
+    } catch { return null; }
+  }
+  function demoPreviewSource(raw) {
+    const href = productUrl(raw);
+    if (!href) return null;
+    const url = new URL(href);
+    url.searchParams.set('inv_preview', '1');
+    return url.href;
+  }
+  function demoPreview(w) {
+    const src = demoPreviewSource(w.demo_url);
+    if (!src) return media(w);
+    return `<div class="demo-preview" data-demo-preview data-src="${esc(src)}">
+      <div class="demo-preview__fallback">${media(w)}</div>
+      <iframe title="Pratinjau ${esc(pick(w.title))}" aria-hidden="true" tabindex="-1"></iframe>
+    </div>`;
+  }
+
+  const previewReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function stopDemoPreview(host) {
+    host._demoPreviewVisible = false;
+    if (host._demoPreviewRaf) cancelAnimationFrame(host._demoPreviewRaf);
+    if (host._demoPreviewRestart) clearTimeout(host._demoPreviewRestart);
+    host._demoPreviewRaf = host._demoPreviewRestart = 0;
+    host._demoPreviewStartedAt = null;
+  }
+  function runDemoPreview(host) {
+    if (!host._demoPreviewVisible || host._demoPreviewRaf || host._demoPreviewRestart) return;
+    const frame = $('iframe', host);
+    let doc, win;
+    try { doc = frame.contentDocument; win = frame.contentWindow; } catch { return; }
+    if (!doc?.body || !win) return;
+
+    // Open invitation templates so the preview starts at the actual page content.
+    doc.documentElement.classList.remove('is-locked');
+    doc.documentElement.style.scrollBehavior = 'auto';
+    doc.body.classList.add('is-open');
+    doc.body.style.scrollBehavior = 'auto';
+    const cover = doc.querySelector('#cover, .cover, [data-invitation-cover]');
+    if (cover) { cover.hidden = true; cover.style.display = 'none'; }
+    doc.querySelectorAll('.rv').forEach(el => el.classList.add('in'));
+    doc.querySelectorAll('audio, video').forEach(el => { try { el.pause(); } catch {} });
+    host.classList.add('is-ready');
+    if (previewReducedMotion) return;
+
+    const animate = (now) => {
+      host._demoPreviewRaf = 0;
+      if (!host._demoPreviewVisible || !host.isConnected) return;
+      const scroll = doc.scrollingElement || doc.documentElement;
+      const max = Math.max(0, scroll.scrollHeight - win.innerHeight);
+      if (!max) return;
+      if (host._demoPreviewStartedAt == null) {
+        host._demoPreviewStartedAt = now;
+        win.scrollTo(0, 0);
+      }
+      const progress = Math.min(1, (now - host._demoPreviewStartedAt) / 6500);
+      win.scrollTo(0, max * progress);
+      if (progress >= 1) {
+        host._demoPreviewRestart = setTimeout(() => {
+          host._demoPreviewRestart = 0;
+          host._demoPreviewStartedAt = null;
+          win.scrollTo(0, 0);
+          if (host._demoPreviewVisible) host._demoPreviewRaf = requestAnimationFrame(animate);
+        }, 500);
+      } else {
+        host._demoPreviewRaf = requestAnimationFrame(animate);
+      }
+    };
+    host._demoPreviewRaf = requestAnimationFrame(animate);
+  }
+  function visibleDemoPreview(host) {
+    const work = host.closest('.work');
+    return !work || getComputedStyle(work).visibility !== 'hidden';
+  }
+  const demoPreviewObserver = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
+    entries.forEach(({ target: host, isIntersecting }) => {
+      if (!host.isConnected) {
+        demoPreviewObserver.unobserve(host);
+        host._demoPreviewResize?.disconnect();
+        stopDemoPreview(host);
+        return;
+      }
+      const visible = isIntersecting && visibleDemoPreview(host);
+      if (!visible) { stopDemoPreview(host); return; }
+      host._demoPreviewVisible = true;
+      const frame = $('iframe', host);
+      if (!frame.dataset.started) {
+        frame.dataset.started = '1';
+        frame.addEventListener('load', () => runDemoPreview(host), { once: true });
+        frame.src = host.dataset.src;
+      } else runDemoPreview(host);
+    });
+  }, { threshold: 0.05 }) : null;
+  function mountDemoPreviews(root = document) {
+    const hosts = $$('[data-demo-preview]', root);
+    hosts.forEach(host => {
+      if (!host._demoPreviewResize && 'ResizeObserver' in window) {
+        host._demoPreviewResize = new ResizeObserver(() => {
+          host.style.setProperty('--preview-scale', String(host.clientWidth / 390));
+        });
+        host._demoPreviewResize.observe(host);
+      }
+      host.style.setProperty('--preview-scale', String(host.clientWidth / 390));
+    });
+    if (!demoPreviewObserver) {
+      hosts.forEach(host => {
+        host._demoPreviewVisible = true;
+        const frame = $('iframe', host);
+        if (!frame.dataset.started) {
+          frame.dataset.started = '1';
+          frame.addEventListener('load', () => runDemoPreview(host), { once: true });
+          frame.src = host.dataset.src;
+        }
+      });
+      return;
+    }
+    hosts.forEach(host => {
+      // Re-observing refreshes visibility after a hidden signature slide becomes active.
+      demoPreviewObserver.unobserve(host);
+      demoPreviewObserver.observe(host);
+    });
+  }
+
   const postCard = (p) => `
     <a class="post" href="article.html?slug=${encodeURIComponent(p.slug)}" data-reveal>
       <div class="post__cover">${p.cover_url ? `<img src="${esc(p.cover_url)}" alt="" loading="lazy">` : '<span class="ph">Invitinity</span>'}</div>
@@ -290,6 +422,6 @@ window.INV = (() => {
     setTimeout(() => document.documentElement.classList.remove('cs-wait'), 2500); // never stay blank if Supabase is slow
   }
 
-  return { sb, cfg, $, $$, esc, pick, ui, fmtDate, markdown, design, media, postCard, renderMocks, waLink, reveal, onLang, init,
+  return { sb, cfg, $, $$, esc, pick, ui, fmtDate, markdown, design, media, productUrl, demoPreviewSource, demoPreview, mountDemoPreviews, postCard, renderMocks, waLink, reveal, onLang, init,
     get lang() { return lang; }, get settings() { return settings; } };
 })();

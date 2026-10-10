@@ -1,8 +1,10 @@
 /* Invitinity home page: hero slider, collection rail + signature slider
    (CMS portfolio), articles, Instagram tiles, modal, forms. */
 (() => {
-  const { sb, $, $$, esc, pick, ui, fmtDate, media, design, waLink, reveal, onLang } = INV;
+  const { sb, $, $$, esc, pick, ui, fmtDate, media, design, demoPreview, mountDemoPreviews, waLink, reveal, onLang } = INV;
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const embeddedPreview = new URLSearchParams(location.search).get('inv_preview') === '1';
+  const portfolioMedia = (w) => embeddedPreview ? media(w) : demoPreview(w);
 
   /* ---------- Hero slider ---------- */
   const hero = $('#hero');
@@ -26,7 +28,7 @@
   /* Auto-advance a slider while it's on screen and the visitor isn't interacting with it.
      Returns a function that restarts the countdown (call it after a manual step). */
   function autoplay(el, advance, ms = 4500) {
-    if (reduceMotion) return () => {};
+    if (reduceMotion || embeddedPreview) return () => {};
     let t = null, visible = false, busy = false;
     const sync = () => { clearInterval(t); t = null; if (visible && !busy && !document.hidden) t = setInterval(() => { if (!document.querySelector('.modal.is-open')) advance(); }, ms); };
     new IntersectionObserver(([e]) => { visible = e.isIntersecting; sync(); }, { threshold: 0.3 }).observe(el);
@@ -58,11 +60,12 @@
     const list = works.filter(w => filter === 'all' || (w.categories || []).includes(filter));
     rail.innerHTML = list.length ? list.map(w => `
       <article class="work" tabindex="0" role="button" data-slug="${esc(w.slug)}" aria-label="${esc(pick(w.title))}">
-        <div class="work__media">${media(w)}<span class="work__quick">${esc(ui('view'))}</span></div>
+        <div class="work__media">${portfolioMedia(w)}<span class="work__quick">${esc(ui('view'))}</span></div>
         <h3>${esc(pick(w.title))}</h3>
-        <small>${esc((w.categories || []).map(labelFor).join(' · '))}</small>
+        ${(w.categories || []).length ? `<small>${esc((w.categories || []).map(labelFor).join(' · '))}</small>` : ''}
       </article>`).join('') : `<p class="empty">${esc(ui('noWorks'))}</p>`;
     rail.scrollLeft = 0;
+    mountDemoPreviews(rail);
     updateRailButtons();
   }
   function updateRailButtons() {
@@ -101,15 +104,17 @@
     soloIdx = Math.min(soloIdx, Math.max(0, items.length - 1));
     stage.innerHTML = items.map((w, i) => `
       <div class="work ${i === soloIdx ? 'is-active' : ''}" data-slug="${esc(w.slug)}" role="button" tabindex="${i === soloIdx ? 0 : -1}" aria-label="${esc(pick(w.title))}">
-        <div class="work__media">${media(w)}<span class="work__quick">${esc(ui('view'))}</span></div>
+        <div class="work__media">${portfolioMedia(w)}<span class="work__quick">${esc(ui('view'))}</span></div>
         <h3>${esc(pick(w.title))}</h3>
-        <small>${esc((w.categories || []).map(labelFor).join(' · '))}</small>
+        ${(w.categories || []).length ? `<small>${esc((w.categories || []).map(labelFor).join(' · '))}</small>` : ''}
       </div>`).join('');
+    mountDemoPreviews(stage);
   }
   function soloStep(dir) {
     const n = soloItems().length; if (n < 2) return;
     soloIdx = (soloIdx + dir + n) % n;
     $$('.work', stage).forEach((el, i) => { el.classList.toggle('is-active', i === soloIdx); el.tabIndex = i === soloIdx ? 0 : -1; });
+    mountDemoPreviews(stage);
   }
   const soloAuto = autoplay($('#solo'), () => soloStep(1), 5000);
   $$('[data-solo]').forEach(b => b.addEventListener('click', () => { soloStep(Number(b.dataset.solo)); soloAuto(); }));
@@ -122,11 +127,17 @@
   const modal = $('#modal');
   let lastFocus = null, openSlug = null;
   function fillModal(w) {
-    $('#modalMedia').innerHTML = `<div>${media(w)}</div>`;
+    $('#modalMedia').innerHTML = `<div>${portfolioMedia(w)}</div>`;
+    if (!embeddedPreview) mountDemoPreviews($('#modalMedia'));
     $('#modalTags').innerHTML = (w.categories || []).map(c => `<span>${esc(labelFor(c))}</span>`).join('');
+    $('#modalTags').hidden = !(w.categories || []).length;
     $('#modalTitle').textContent = pick(w.title);
-    $('#modalDesc').textContent = pick(w.description);
-    $('#modalList').innerHTML = (pick(w.features) || []).map(f => `<li>${esc(f)}</li>`).join('');
+    const description = pick(w.description);
+    const features = pick(w.features) || [];
+    $('#modalDesc').textContent = description;
+    $('#modalDesc').hidden = !description;
+    $('#modalList').innerHTML = features.map(f => `<li>${esc(f)}</li>`).join('');
+    $('#modalList').hidden = !features.length;
     const demoUrl = (w.demo_url || '').trim().replace(/^(?!https?:\/\/)(?=.)/i, 'https://');
     const demo = /^https?:\/\/[^\s]+$/i.test(demoUrl) ? `<a class="btn btn--outline" href="${esc(demoUrl)}" target="_blank" rel="noopener">${esc(ui('liveDemo'))}</a>` : '';
     $('#modalActions').innerHTML = `<a class="btn" href="${esc(waLink(ui('wa.design', { title: pick(w.title) })))}" target="_blank" rel="noopener">${esc(ui('useDesign'))}</a>${demo}`;

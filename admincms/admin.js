@@ -177,8 +177,8 @@
     state.portfolio = data || [];
     $('#portfolioList').innerHTML = error || !data.length ? emptyState('portfolio', error) : data.map(w => `
       <div class="row-item" data-edit="portfolio" data-id="${w.id}">
-        <div class="thumb">${w.image_url ? `<img src="${esc(w.image_url)}" alt="">` : design(w)}</div>
-        <div><h4>${esc(idText(w.title)) || '(tanpa judul)'}</h4><p>${esc((w.categories || []).map(c => CAT_LABEL[c] || c).join(' · '))} · urutan ${w.sort_order}</p></div>
+        <div class="thumb">${w.image_url ? `<img src="${esc(w.image_url)}" alt="">` : w.demo_url ? `<span class="thumb-initial">${esc((idText(w.title) || 'I').slice(0, 1))}</span>` : design(w)}</div>
+        <div><h4>${esc(idText(w.title)) || '(tanpa judul)'}</h4><p>${(w.categories || []).length ? `${esc((w.categories || []).map(c => CAT_LABEL[c] || c).join(' · '))} · ` : ''}urutan ${w.sort_order}</p></div>
         <span class="pill ${w.published ? '' : 'off'}">${w.published ? 'Tayang' : 'Draft'}</span>
       </div>`).join('');
   }
@@ -222,49 +222,37 @@
     return `
       <div class="editor-preview">
         <div class="card-preview" id="pv"></div>
-        <div class="box"><b>Konten</b>
+        <div class="box"><b>Produk</b>
           ${i18nField('title', 'Judul', w.title)}
+          <label>Link produk / demo <small>Pakai link di domain Invitinity; pratinjau akan bergerak otomatis.</small><input name="demo_url" type="text" inputmode="url" required value="${esc(w.demo_url || '')}" placeholder="https://invitinity.my.id/demo/contoh/"></label>
+        </div>
+      </div>
+      <details class="box portfolio-advanced">
+        <summary>Pengaturan tambahan <small>(opsional)</small></summary>
+        <div class="advanced-fields">
+          <div class="checks">${window.PORTFOLIO_CATEGORIES.map(c => `<label><input type="checkbox" name="cat" value="${c}" ${cats.includes(c) ? 'checked' : ''}> ${CAT_LABEL[c]}</label>`).join('')}</div>
           ${i18nField('description', 'Deskripsi', w.description, { type: 'textarea' })}
           ${i18nField('features', 'Fitur', w.features, { type: 'textarea', ph: 'Satu fitur per baris' })}
         </div>
-      </div>
-      <div class="box"><b>Kategori</b>
-        <div class="checks">${window.PORTFOLIO_CATEGORIES.map(c => `<label><input type="checkbox" name="cat" value="${c}" ${cats.includes(c) ? 'checked' : ''}> ${CAT_LABEL[c]}</label>`).join('')}</div>
-      </div>
-      <div class="box"><b>Gambar</b>
-        <p class="hint">Unggah foto/mockup desain (rasio 4:5 ideal). Jika kosong, kartu otomatis dibuat dari data “Kartu otomatis”. Gambar otomatis diperkecil (maks ${MAX_SIDE}px) &amp; dikompres.</p>
-        <label class="inline-check"><input type="checkbox" name="watermark" checked> Pasang watermark “invitinity.my.id” di gambar <small>(disarankan, supaya karya tidak mudah dicuri)</small></label>
-        <div class="upload"><input type="file" accept="image/*"></div>
-        <label>atau URL gambar<input name="image_url" value="${esc(w.image_url || '')}" placeholder="https://…"></label>
-      </div>
-      <div class="box"><b>Kartu otomatis</b>
-        <div class="grid2">
-          <label>Tema<select name="theme">${window.PORTFOLIO_THEMES.map(t => `<option ${t === (w.theme || 'ivory') ? 'selected' : ''}>${t}</option>`).join('')}</select></label>
-          <label>Teks kecil atas<input name="kicker" value="${esc(w.kicker || '')}" placeholder="The Wedding of"></label>
-          <label>Nama<input name="names" value="${esc(w.names || '')}" placeholder="Alya & Raka"></label>
-          <label>Tanggal<input name="event_date" value="${esc(w.event_date || '')}" placeholder="12 · 12 · 2026"></label>
-          <label>Lokasi<input name="place" value="${esc(w.place || '')}" placeholder="Bandung"></label>
-        </div>
-      </div>
-      <div class="box"><b>Lainnya</b>
         <div class="grid2">
           <label>Slug (URL unik)<input name="slug" value="${esc(w.slug || '')}" placeholder="otomatis dari judul"></label>
-          <label>Link demo undangan <small>(tombol “Lihat demo” di detail; kosongkan untuk sembunyikan)</small><input name="demo_url" type="text" inputmode="url" value="${esc(w.demo_url || '')}" placeholder="https://alyaraka.com"></label>
           <label>Urutan<input name="sort_order" type="number" value="${w.sort_order ?? (state.portfolio.length + 1)}"></label>
           <label style="align-self:end;display:flex;gap:8px;align-items:center"><input type="checkbox" name="published" ${w.published !== false ? 'checked' : ''}> Tayang di website</label>
         </div>
-      </div>`;
+      </details>`;
   }
   function wirePortfolio(form, row) {
+    let previewTimer;
     const preview = () => {
-      const f = form.elements;
-      $('#pv').innerHTML = f.image_url.value.trim()
-        ? `<img src="${esc(f.image_url.value.trim())}" alt="">`
-        : design({ theme: f.theme.value, kicker: f.kicker.value, names: f.names.value, event_date: f.event_date.value, place: f.place.value });
+      clearTimeout(previewTimer);
+      previewTimer = setTimeout(() => {
+        const f = form.elements;
+        $('#pv').innerHTML = INV.demoPreview({ ...row, title: readI18n(form, 'title'), demo_url: f.demo_url.value.trim() });
+        INV.mountDemoPreviews($('#pv'));
+      }, 350);
     };
     if (form._md) { form.removeEventListener('langchange', form._md); form._md = null; }
     form.oninput = preview; preview();
-    bindUpload(form, 'image_url', 'portfolio', preview);
     autoSlug(form, row);
   }
 
@@ -313,10 +301,12 @@
   }
 
   function autoSlug(form, row) {
-    const slug = form.elements.slug, title = form.elements['title.id'];
+    const slug = form.elements.slug;
     let manual = !!row?.slug;
     slug.addEventListener('input', () => { manual = !!slug.value; });
-    title.addEventListener('input', () => { if (!manual) slug.value = slugify(title.value); });
+    ['title.id', 'title.en', 'title.ms'].forEach(name => form.elements[name].addEventListener('input', () => {
+      if (!manual) slug.value = slugify(form.elements['title.id'].value || form.elements['title.en'].value || form.elements['title.ms'].value);
+    }));
   }
 
   /* ---------- Save / delete ---------- */
@@ -330,14 +320,15 @@
 
     let payload;
     if (kind === 'portfolio') {
+      if (!f.demo_url.value.trim()) return toast('Link produk wajib diisi.', true);
+      const demoUrl = INV.productUrl(f.demo_url.value);
+      if (!demoUrl) return toast('Gunakan link produk di domain Invitinity yang valid.', true);
       payload = {
         slug, title,
         description: readI18n(form, 'description'),
         features: readI18n(form, 'features', true),
         categories: $$('input[name="cat"]:checked', form).map(c => c.value),
-        theme: f.theme.value, kicker: f.kicker.value.trim(), names: f.names.value.trim(),
-        event_date: f.event_date.value.trim(), place: f.place.value.trim(),
-        image_url: f.image_url.value.trim() || null, demo_url: f.demo_url.value.trim().replace(/^(?!https?:\/\/)(?=.)/i, 'https://') || null,
+        demo_url: demoUrl,
         sort_order: Number(f.sort_order.value) || 0, published: f.published.checked,
       };
     } else {
