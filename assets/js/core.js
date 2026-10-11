@@ -247,6 +247,7 @@ window.INV = (() => {
   }
 
   const previewReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const previewScrollDuration = 15000;
   function stopDemoPreview(host) {
     host._demoPreviewVisible = false;
     if (host._demoPreviewRaf) cancelAnimationFrame(host._demoPreviewRaf);
@@ -283,15 +284,16 @@ window.INV = (() => {
         host._demoPreviewStartedAt = now;
         win.scrollTo(0, 0);
       }
-      const progress = Math.min(1, (now - host._demoPreviewStartedAt) / 6500);
-      win.scrollTo(0, max * progress);
+      const progress = Math.min(1, (now - host._demoPreviewStartedAt) / previewScrollDuration);
+      const smoothProgress = 0.5 - Math.cos(Math.PI * progress) / 2;
+      win.scrollTo(0, max * smoothProgress);
       if (progress >= 1) {
         host._demoPreviewRestart = setTimeout(() => {
           host._demoPreviewRestart = 0;
           host._demoPreviewStartedAt = null;
           win.scrollTo(0, 0);
           if (host._demoPreviewVisible) host._demoPreviewRaf = requestAnimationFrame(animate);
-        }, 500);
+        }, 850);
       } else {
         host._demoPreviewRaf = requestAnimationFrame(animate);
       }
